@@ -1,0 +1,94 @@
+/**
+ * Arma data/planilla-ejemplo.xlsx a partir de data/ejemplo/*.csv.
+ * Se sube a Google Drive y se abre con Google Sheets: queda lista para usar.
+ * Uso: npm run planilla:generar
+ */
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import ExcelJS from "exceljs";
+import { leerCsv } from "../../src/lib/datos/csv";
+import { COLUMNAS } from "../../src/lib/datos/esquemas";
+
+const CARPETA = path.join(process.cwd(), "data");
+const HOJAS = ["Equipos", "Partidos", "Eventos", "Jugadores"] as const;
+
+/** Columnas que se guardan como número; el resto va como texto plano. */
+const NUMERICAS = new Set(["año", "fecha_nro", "penales_local", "penales_visitante", "minuto", "número", "peso_kg", "altura_cm"]);
+
+/** Listas desplegables para que no se carguen valores inválidos. */
+const OPCIONES: Record<string, string[]> = {
+  fase: ["zona", "octavos", "cuartos", "semis", "tercer puesto", "final"],
+  estado: ["programado", "en juego", "finalizado"],
+  tipo: ["gol", "gol en contra", "amarilla", "roja"],
+};
+
+const INSTRUCCIONES = [
+  ["Copa Falucho: planilla de datos"],
+  [""],
+  ["Los nombres de las pestañas y de las columnas tienen que quedar exactamente así."],
+  ["Equipos: id = año de la clase (ej. 2001). nombre es opcional: si está vacío se muestra \"Clase 2001\"."],
+  ["Partidos: estado = programado / en juego / finalizado. El resultado NO se carga: sale de los goles de Eventos."],
+  ["Partidos de fase final: completá la columna llave (C1, S1, F…) y dejá local y visitante vacíos: la app los completa sola."],
+  ["Si una llave termina empatada, cargá penales_local y penales_visitante."],
+  ["Eventos: una fila por gol o tarjeta. equipo = equipo del jugador (en un gol en contra, el equipo del que lo hizo)."],
+  ["Jugadores: id = año-número de orden (ej. 2001-07). foto_url opcional; las fotos importadas se cargan solas."],
+  ["Fechas en formato dd/mm/aaaa y horas en hh:mm."],
+];
+
+async function main() {
+  const libro = new ExcelJS.Workbook();
+  libro.creator = "Copa Falucho";
+
+  for (const hoja of HOJAS) {
+    const columnas = COLUMNAS[hoja];
+    const { filas } = leerCsv(await readFile(path.join(CARPETA, "ejemplo", `${hoja.toLowerCase()}.csv`), "utf8"));
+    const claves = Object.keys(filas[0] ?? {});
+    const ws = libro.addWorksheet(hoja, { views: [{ state: "frozen", ySplit: 1 }] });
+
+    ws.columns = columnas.map((titulo) => ({
+      header: titulo,
+      width: Math.max(10, titulo.length + 4, titulo === "nombre" ? 26 : 0),
+      style: NUMERICAS.has(titulo) ? {} : { numFmt: "@" },
+    }));
+    for (const fila of filas) {
+      ws.addRow(
+        columnas.map((titulo, i) => {
+          const valor = fila[claves[i]] ?? "";
+          if (valor === "") return null;
+          return NUMERICAS.has(titulo) ? Number(valor) : valor;
+        }),
+      );
+    }
+
+    const encabezado = ws.getRow(1);
+    encabezado.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    encabezado.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF303083" } };
+
+    columnas.forEach((titulo, i) => {
+      const opciones = OPCIONES[titulo];
+      if (!opciones) return;
+      const letra = ws.getColumn(i + 1).letter;
+      for (let r = 2; r <= 1000; r++) {
+        ws.getCell(`${letra}${r}`).dataValidation = {
+          type: "list",
+          allowBlank: true,
+          formulae: [`"${opciones.join(",")}"`],
+        };
+      }
+    });
+  }
+
+  const ayuda = libro.addWorksheet("Instrucciones");
+  ayuda.getColumn(1).width = 120;
+  INSTRUCCIONES.forEach((linea) => ayuda.addRow(linea));
+  ayuda.getRow(1).font = { bold: true, size: 14 };
+
+  const destino = path.join(CARPETA, "planilla-ejemplo.xlsx");
+  await libro.xlsx.writeFile(destino);
+  console.log(`✓ ${path.relative(process.cwd(), destino)}`);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/*
+ * Los valores de color viven en src/config/marca.ts y se inyectan como
+ * variables --c-* desde el layout. Acá solo se exponen a Tailwind.
+ */
+@theme inline {
+  --color-fondo: var(--c-fondo);
+  --color-superficie: var(--c-superficie);
+  --color-superficie-alt: var(--c-superficie-alt);
+  --color-borde: var(--c-borde);
+  --color-texto: var(--c-texto);
+  --color-texto-suave: var(--c-texto-suave);
+  --color-marca: var(--c-marca);
+  --color-marca-texto: var(--c-marca-texto);
+  --color-acento: var(--c-acento);
+  --color-acento-texto: var(--c-acento-texto);
+  --color-vivo: var(--c-vivo);
+  --color-vivo-texto: var(--c-vivo-texto);
+  --color-victoria: var(--c-victoria);
+  --color-empate: var(--c-empate);
+  --color-derrota: var(--c-derrota);
+  --color-amarilla: var(--c-amarilla);
+  --color-roja: var(--c-roja);
+  --color-foco: var(--c-foco);
+
+  --font-sans: var(--fuente-texto), ui-sans-serif, system-ui, sans-serif;
+  --font-titulos: var(--fuente-titulos), var(--fuente-texto), ui-sans-serif, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--c-fondo);
+    color: var(--c-texto);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* 16px mínimo para que iOS no haga zoom al enfocar. */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1rem);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--c-foco);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility px-safe {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
