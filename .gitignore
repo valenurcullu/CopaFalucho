@@ -43,3 +43,6 @@ next-env.d.ts
 
 # salida del importador de jugadores (se pega en la planilla)
 /data/jugadores-importados.csv
+
+# QR y cartel generados con npm run qr
+/qr/

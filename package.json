@@ -13,7 +13,8 @@
     "ejemplo:generar": "tsx scripts/ejemplo/generar.ts",
     "planilla:generar": "tsx scripts/planilla/generar-planilla.ts",
     "iconos:generar": "tsx scripts/marca/generar-iconos.ts",
-    "jugadores:importar": "tsx scripts/importar/importar-jugadores.ts"
+    "jugadores:importar": "tsx scripts/importar/importar-jugadores.ts",
+    "qr": "tsx scripts/qr/generar-qr.ts"
   },
   "dependencies": {
     "@serwist/turbopack": "^9.5.13",
@@ -29,12 +30,14 @@
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^24.19.2",
     "@types/papaparse": "^5.5.2",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
     "exceljs": "^4.4.0",
+    "qrcode": "^1.5.4",
     "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",

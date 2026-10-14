@@ -31,6 +31,19 @@ describe("datos de ejemplo", () => {
   });
 });
 
+describe("formato gviz de Google Sheets", () => {
+  it("lee valores entre comillas y celdas vacías", () => {
+    const csv = '"id","año","zona","nombre","escudo_url"\n"2001","2001","A","",""\n"2002","2002","A","Los Pibes",""\n';
+    const datos = armarDatos(hojas({ Equipos: leerCsv(csv).filas }), opciones);
+    expect(datos.avisos).toEqual([]);
+    expect(datos.equipos.map((e) => e.nombre)).toEqual(["Clase 2001", "Los Pibes"]);
+  });
+
+  it("una hoja vacía no tiene columnas ni filas", () => {
+    expect(leerCsv("")).toEqual({ columnas: [], filas: [] });
+  });
+});
+
 describe("encabezados", () => {
   it("acepta mayúsculas, acentos y alias", () => {
     const { columnas } = leerCsv("ID,Año,Zona,Nombre opcional\n2001,2001,A,\n");

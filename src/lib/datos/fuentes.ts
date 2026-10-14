@@ -31,7 +31,8 @@ async function leerHojas(leer: (hoja: Hoja) => Promise<string>): Promise<HojasCr
   const contenidos = await Promise.all(HOJAS.map(leer));
   const entradas = HOJAS.map((hoja, i) => {
     const { columnas, filas } = leerCsv(contenidos[i]);
-    verificarColumnas(hoja, columnas);
+    // Una hoja totalmente vacía (ni encabezado) cuenta como sin filas.
+    if (columnas.length > 0) verificarColumnas(hoja, columnas);
     return [hoja, filas] as const;
   });
   return Object.fromEntries(entradas) as HojasCrudas;
