@@ -3,6 +3,7 @@ import { cache } from "react";
 import { torneoConfig } from "@/config/torneo";
 import type { DatosTorneo } from "@/domain/tipos";
 import { armarDatos } from "./armar";
+import { completarFotos } from "./fotos";
 import { leerEjemplo, leerPlanilla } from "./fuentes";
 
 /**
@@ -19,8 +20,9 @@ export const obtenerDatos = cache(async (): Promise<DatosTorneo> => {
   const hojas = idPlanilla
     ? await leerPlanilla(idPlanilla, torneoConfig.revalidarSegundos)
     : await leerEjemplo();
-  return armarDatos(hojas, {
+  const datos = armarDatos(hojas, {
     origen: idPlanilla ? "planilla" : "ejemplo",
     duracionMinutos: torneoConfig.duracionMinutos,
   });
+  return { ...datos, jugadores: completarFotos(datos.jugadores) };
 });

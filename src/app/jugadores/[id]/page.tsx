@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { BotonCompartir } from "@/components/jugadores/BotonCompartir";
 import { Figurita } from "@/components/jugadores/Figurita";
 import { Volver } from "@/components/layout/Volver";
 import { Esqueleto } from "@/components/ui/basicos";
+import { marca } from "@/config/marca";
 import { torneoConfig } from "@/config/torneo";
 import { obtenerTorneo } from "@/lib/torneo";
 import { indices } from "@/lib/torneo/vista";
@@ -39,6 +41,7 @@ async function Ficha({ params }: { params: PageProps<"/jugadores/[id]">["params"
         edicion={torneoConfig.edicion}
         mostrarPesoAltura={torneoConfig.jugadores.mostrarPesoAltura}
       />
+      <BotonCompartir titulo={jugador.nombre} texto={`La figurita de ${jugador.nombre} en la ${marca.nombreTorneo}`} />
     </>
   );
 }

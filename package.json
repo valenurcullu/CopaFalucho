@@ -12,7 +12,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "ejemplo:generar": "tsx scripts/ejemplo/generar.ts",
     "planilla:generar": "tsx scripts/planilla/generar-planilla.ts",
-    "iconos:generar": "tsx scripts/marca/generar-iconos.ts"
+    "iconos:generar": "tsx scripts/marca/generar-iconos.ts",
+    "jugadores:importar": "tsx scripts/importar/importar-jugadores.ts"
   },
   "dependencies": {
     "@serwist/turbopack": "^9.5.13",
