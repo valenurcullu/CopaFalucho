@@ -4,8 +4,12 @@
  */
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { escribirCsv } from "../../src/lib/datos/csv";
+import { torneoConfig } from "../../src/config/torneo";
+import type { Fase } from "../../src/domain/tipos";
+import { armarDatos } from "../../src/lib/datos/armar";
+import { escribirCsv, normalizarColumna, type FilaCruda } from "../../src/lib/datos/csv";
 import { COLUMNAS } from "../../src/lib/datos/esquemas";
+import { analizarTorneo } from "../../src/lib/torneo/analizar";
 import { crearAzar, type Azar } from "./azar";
 import { APELLIDOS, ARBITROS, NOMBRES } from "./nombres";
 
@@ -109,6 +113,68 @@ const ROUND_ROBIN_4: [number, number][][] = [
 
 const FECHAS_ZONA = ["28/11/2026", "29/11/2026", "05/12/2026"];
 
+/** Índices de columnas de la hoja Partidos que se completan al simular. */
+const COL = { estado: 11, penalesLocal: 12, penalesVisitante: 13 };
+
+function aCrudas(columnas: readonly string[], filas: Fila[]): FilaCruda[] {
+  const claves = columnas.map(normalizarColumna);
+  return filas.map((f) => Object.fromEntries(claves.map((c, i) => [c, f[i] === null ? "" : String(f[i])])));
+}
+
+/**
+ * Escenario de la fase final: cuartos jugados (uno por penales), una semi
+ * terminada, la otra en juego y la final por jugarse. Los cruces salen de la
+ * misma lógica que usa la app, así que el ejemplo siempre es consistente.
+ */
+function simularFaseFinal(
+  azar: Azar,
+  equipos: Fila[],
+  partidos: Fila[],
+  eventos: Fila[],
+  jugadores: Fila[],
+  plantel: Map<string, JugadorEjemplo[]>,
+) {
+  const guion: Partial<Record<string, { estado: "finalizado" | "en juego"; hastaMinuto?: number; golesForzados?: [number, number] }>> = {
+    CU1: { estado: "finalizado" },
+    CU2: { estado: "finalizado", golesForzados: [1, 1] },
+    CU3: { estado: "finalizado" },
+    CU4: { estado: "finalizado" },
+    SE1: { estado: "finalizado" },
+    SE2: { estado: "en juego", hastaMinuto: 32 },
+  };
+  const fases: Fase[] = ["octavos", "cuartos", "semis", "tercer_puesto", "final"];
+  for (const fase of fases) {
+    const datos = armarDatos(
+      {
+        Equipos: aCrudas(COLUMNAS.Equipos, equipos),
+        Partidos: aCrudas(COLUMNAS.Partidos, partidos),
+        Eventos: aCrudas(COLUMNAS.Eventos, eventos),
+        Jugadores: aCrudas(COLUMNAS.Jugadores, jugadores),
+      },
+      { origen: "ejemplo", duracionMinutos: DURACION },
+    );
+    const torneo = analizarTorneo(datos, torneoConfig);
+    for (const p of torneo.partidos.filter((x) => x.fase === fase)) {
+      const paso = guion[p.id];
+      if (!paso || !p.localId || !p.visitanteId) continue;
+      const fila = partidos.find((f) => f[0] === p.id)!;
+      const nuevos = simularEventos(azar, p.id, [p.localId, p.visitanteId], plantel, paso);
+      eventos.push(...nuevos);
+      fila[COL.estado] = paso.estado;
+      if (paso.estado !== "finalizado") continue;
+      const goles = nuevos.filter((e) => e[1] === "gol" || e[1] === "gol en contra");
+      const gl = goles.filter((e) => (e[1] === "gol") === (e[2] === p.localId)).length;
+      const gv = goles.length - gl;
+      if (gl === gv) {
+        const ganados = azar.entero(3, 5);
+        const local = azar.siguiente() < 0.5;
+        fila[COL.penalesLocal] = local ? ganados : ganados - azar.entero(1, 2);
+        fila[COL.penalesVisitante] = local ? ganados - azar.entero(1, 2) : ganados;
+      }
+    }
+  }
+}
+
 async function main() {
   const azar = crearAzar(SEMILLA);
 
@@ -161,6 +227,8 @@ async function main() {
     const cancha = fase === "cuartos" ? CANCHAS[i] : fase === "semis" ? CANCHAS[i - 4] : CANCHAS[0];
     partidos.push([id, fase, null, llave, null, fecha, hora, cancha, null, null, azar.elegir(ARBITROS), "programado", null, null]);
   });
+
+  simularFaseFinal(azar, equipos, partidos, eventos, jugadores, plantel);
 
   await mkdir(CARPETA, { recursive: true });
   const archivos: [string, readonly string[], Fila[]][] = [

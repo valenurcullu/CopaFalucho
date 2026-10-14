@@ -23,6 +23,9 @@
   --color-amarilla: var(--c-amarilla);
   --color-roja: var(--c-roja);
   --color-foco: var(--c-foco);
+  --color-figurita-fondo: var(--c-figurita-fondo);
+  --color-figurita-brillo: var(--c-figurita-brillo);
+  --color-figurita-marco: var(--c-figurita-marco);
 
   --font-sans: var(--fuente-texto), ui-sans-serif, system-ui, sans-serif;
   --font-titulos: var(--fuente-titulos), var(--fuente-texto), ui-sans-serif, sans-serif;

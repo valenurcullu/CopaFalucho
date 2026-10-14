@@ -1,36 +1,34 @@
-import Image from "next/image";
 import { Suspense } from "react";
-import { marca } from "@/config/marca";
-import { obtenerDatos } from "@/lib/datos";
+import { AvisoFormato } from "@/components/layout/AvisoFormato";
+import { Fixture } from "@/components/partidos/Fixture";
+import { EsqueletoLista } from "@/components/ui/basicos";
+import { torneoConfig } from "@/config/torneo";
+import { obtenerTorneo } from "@/lib/torneo";
+import { aTarjeta, indices } from "@/lib/torneo/vista";
 
-async function ResumenDatos() {
-  const datos = await obtenerDatos();
-  const jugados = datos.partidos.filter((p) => p.estado === "finalizado").length;
+async function FixtureConDatos() {
+  const torneo = await obtenerTorneo();
+  const { equipos, jugadores } = indices(torneo);
   return (
-    <ul className="grid grid-cols-2 gap-3 text-center">
-      {[
-        ["Equipos", datos.equipos.length],
-        ["Jugadores", datos.jugadores.length],
-        ["Partidos jugados", `${jugados}/${datos.partidos.length}`],
-        ["Eventos", datos.eventos.length],
-      ].map(([titulo, valor]) => (
-        <li key={titulo} className="rounded-xl bg-superficie p-4 ring-1 ring-borde">
-          <p className="font-titulos text-3xl font-bold">{valor}</p>
-          <p className="text-sm text-texto-suave">{titulo}</p>
-        </li>
-      ))}
-    </ul>
+    <>
+      <AvisoFormato torneo={torneo} />
+      <Fixture
+        partidos={torneo.partidos.map((p) => aTarjeta(p, equipos, jugadores))}
+        equipos={torneo.equipos}
+        zonas={torneo.zonas.map((z) => z.zona)}
+        conFichas={torneoConfig.jugadores.mostrarFichas}
+      />
+    </>
   );
 }
 
-export default function Inicio() {
+export default function PaginaFixture() {
   return (
-    <main className="mx-auto flex max-w-md flex-col items-center gap-6 px-safe pt-safe py-10">
-      <Image src={marca.logo.src} alt={marca.logo.alt} width={160} height={243} priority />
-      <h1 className="font-titulos text-4xl font-extrabold uppercase tracking-wide">{marca.nombreTorneo}</h1>
-      <Suspense fallback={<p className="text-texto-suave">Cargando datos…</p>}>
-        <ResumenDatos />
+    <>
+      <h1 className="sr-only">Fixture</h1>
+      <Suspense fallback={<EsqueletoLista />}>
+        <FixtureConDatos />
       </Suspense>
-    </main>
+    </>
   );
 }

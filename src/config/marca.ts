@@ -38,6 +38,9 @@ export const marca = {
       amarilla: "#F2C200",
       roja: "#D7090F",
       foco: "#0046B6",
+      figuritaFondo: "#1D1E5C",
+      figuritaBrillo: "#3B3DA6",
+      figuritaMarco: "#B8860B",
     },
     oscuro: {
       fondo: "#0B0C1A",
@@ -58,6 +61,9 @@ export const marca = {
       amarilla: "#F5C518",
       roja: "#FF4040",
       foco: "#8FA8FF",
+      figuritaFondo: "#1D1E5C",
+      figuritaBrillo: "#3B3DA6",
+      figuritaMarco: "#B8860B",
     },
   },
 } as const;
