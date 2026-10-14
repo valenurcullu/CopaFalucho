@@ -19,17 +19,17 @@ export interface CruceCuadro {
 
 function Lado({ equipo, etiqueta, goles, penales, gana, pierde }: { equipo: Equipo | null; etiqueta: string; goles: number | null; penales: number | null; gana: boolean; pierde: boolean }) {
   return (
-    <div className={`flex min-h-11 items-center gap-2 px-3 ${pierde ? "opacity-55" : ""}`}>
+    <div className="flex min-h-11 items-center gap-2 px-3">
       <EscudoClase equipo={equipo} tamanio="sm" />
       {equipo ? (
-        <Link href={`/equipos/${equipo.id}`} className={`min-w-0 flex-1 truncate text-sm ${gana ? "font-bold" : "font-medium"}`}>
+        <Link href={`/equipos/${equipo.id}`} prefetch={false} className={`min-w-0 flex-1 truncate py-2 text-sm ${gana ? "font-bold" : pierde ? "font-medium text-texto-suave" : "font-medium"}`}>
           {equipo.nombre}
         </Link>
       ) : (
         <span className="min-w-0 flex-1 truncate text-sm italic text-texto-suave">{etiqueta}</span>
       )}
-      {penales !== null && <span className="text-[11px] text-texto-suave">({penales})</span>}
-      <span className={`w-5 text-right font-titulos text-xl tabular-nums ${gana ? "font-extrabold" : "font-semibold"}`}>{goles ?? ""}</span>
+      {penales !== null && <span className="text-xs text-texto-suave">({penales})</span>}
+      <span className={`w-5 text-right font-titulos text-xl tabular-nums ${gana ? "font-extrabold" : pierde ? "font-bold text-texto-suave" : "font-bold"}`}>{goles ?? ""}</span>
     </div>
   );
 }

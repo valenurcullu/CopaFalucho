@@ -62,7 +62,7 @@ export function TablaZona({ zona, equipos, rachas, clasificados }: Props) {
                   )}
                 </td>
                 <th scope="row" className="py-1.5 text-left font-normal">
-                  <Link href={`/equipos/${f.equipoId}`} className="flex min-h-11 items-center gap-2">
+                  <Link href={`/equipos/${f.equipoId}`} prefetch={false} className="flex min-h-11 items-center gap-2">
                     <EscudoClase equipo={equipo} tamanio="sm" />
                     <span className="min-w-0">
                       <span className="block truncate font-semibold">{equipo?.nombre ?? f.equipoId}</span>

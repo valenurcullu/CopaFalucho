@@ -48,12 +48,12 @@ export function leerEjemplo(): Promise<HojasCrudas> {
  * El endpoint gviz devuelve el estado actual de la planilla, sin la demora
  * de varios minutos que tiene "Publicar en la Web".
  */
-export function leerPlanilla(idPlanilla: string): Promise<HojasCrudas> {
+export function leerPlanilla(idPlanilla: string, revalidarSegundos: number): Promise<HojasCrudas> {
   return leerHojas(async (hoja) => {
     const url =
       `https://docs.google.com/spreadsheets/d/${encodeURIComponent(idPlanilla)}` +
       `/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(hoja)}`;
-    const respuesta = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(10_000) });
+    const respuesta = await fetch(url, { next: { revalidate: revalidarSegundos }, signal: AbortSignal.timeout(10_000) });
     if (!respuesta.ok) {
       throw new Error(`No se pudo leer la hoja "${hoja}" (HTTP ${respuesta.status}). ¿Está compartida con el link?`);
     }

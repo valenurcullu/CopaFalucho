@@ -20,5 +20,5 @@ export const torneoConfig: TorneoConfig = {
     mostrarFichas: true,
     mostrarPesoAltura: true,
   },
-  revalidarSegundos: 30,
+  revalidarSegundos: 300,
 };

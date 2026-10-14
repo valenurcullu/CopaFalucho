@@ -18,7 +18,7 @@ async function Chequeo() {
         <p>
           Leídos: {torneo.equipos.length} equipos, {torneo.partidos.length} partidos, {torneo.jugadores.length} jugadores.
         </p>
-        <p className="mt-2 text-texto-suave">Los cambios en la planilla aparecen en la app en 30 a 60 segundos.</p>
+        <p className="mt-2 text-texto-suave">Los cambios en la planilla aparecen en la app en 5 a 10 minutos.</p>
       </Tarjeta>
 
       {torneo.erroresFormato.length > 0 && (

@@ -20,17 +20,17 @@ function etiquetaFase(p: PartidoTarjeta) {
 
 function FilaEquipo({ equipo, etiqueta, goles, gana, penales }: { equipo: Equipo | null; etiqueta: string | null; goles: number | null; gana: boolean; penales: number | null }) {
   return (
-    <div className="flex min-h-10 items-center gap-3">
+    <div className="flex min-h-11 items-center gap-3">
       <EscudoClase equipo={equipo} tamanio="sm" />
       {equipo ? (
-        <Link href={`/equipos/${equipo.id}`} className={`min-w-0 flex-1 truncate text-[15px] ${gana ? "font-bold" : "font-medium"}`}>
+        <Link href={`/equipos/${equipo.id}`} prefetch={false} className={`min-w-0 flex-1 truncate py-2 text-[15px] ${gana ? "font-bold" : "font-medium"}`}>
           {equipo.nombre}
         </Link>
       ) : (
         <span className="min-w-0 flex-1 truncate text-[15px] italic text-texto-suave">{etiqueta ?? "A definir"}</span>
       )}
       {penales !== null && <span className="text-xs font-semibold tabular-nums text-texto-suave">({penales})</span>}
-      <span className={`w-7 text-right font-titulos text-2xl leading-none tabular-nums ${gana ? "font-extrabold" : "font-semibold"}`}>
+      <span className={`w-7 text-right font-titulos text-2xl leading-none tabular-nums ${gana ? "font-extrabold" : "font-bold"}`}>
         {goles ?? ""}
       </span>
     </div>
@@ -53,11 +53,11 @@ function LineaEvento({ evento, conFichas }: { evento: EventoVista; conFichas: bo
   );
   const derecha = evento.lado === "visitante";
   return (
-    <li className={`flex items-center gap-1.5 ${derecha ? "flex-row-reverse text-right" : ""}`}>
+    <li className={`flex min-h-7 items-center gap-1.5 ${derecha ? "flex-row-reverse text-right" : ""}`}>
       {icono}
       <span className="w-6 shrink-0 tabular-nums text-texto-suave">{evento.minuto !== null ? `${evento.minuto}’` : ""}</span>
       {conFichas && evento.jugadorId && evento.jugador ? (
-        <Link href={`/jugadores/${evento.jugadorId}`} className="min-w-0 truncate underline-offset-2 hover:underline">
+        <Link href={`/jugadores/${evento.jugadorId}`} prefetch={false} className="min-w-0 truncate py-1 underline-offset-2 hover:underline">
           {contenido}
         </Link>
       ) : (

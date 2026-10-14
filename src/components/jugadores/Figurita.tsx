@@ -17,7 +17,7 @@ interface Props {
 function Dato({ titulo, valor }: { titulo: string; valor: string }) {
   return (
     <div className="rounded-lg bg-white/8 px-2 py-1.5">
-      <dt className="text-[10px] font-semibold uppercase tracking-wider opacity-75">{titulo}</dt>
+      <dt className="text-xs font-semibold uppercase tracking-wider opacity-75">{titulo}</dt>
       <dd className="font-titulos text-lg font-bold leading-tight">{valor}</dd>
     </div>
   );
@@ -77,22 +77,22 @@ export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAl
         </dl>
 
         <div className="border-t border-white/15 px-3 pb-3 pt-2">
-          <h2 className="mb-1.5 text-center text-[10px] font-semibold uppercase tracking-[0.2em] opacity-75">En el torneo</h2>
+          <h2 className="mb-1.5 text-center text-xs font-semibold uppercase tracking-[0.2em] opacity-75">En el torneo</h2>
           <dl className="grid grid-cols-3 gap-2 text-center">
             <div>
-              <dt className="flex items-center justify-center gap-1 text-[11px] opacity-80">
+              <dt className="flex items-center justify-center gap-1 text-xs opacity-80">
                 <IconoPelota /> Goles
               </dt>
               <dd className="font-titulos text-3xl font-extrabold text-acento">{estadisticas.goles}</dd>
             </div>
             <div>
-              <dt className="flex items-center justify-center gap-1 text-[11px] opacity-80">
+              <dt className="flex items-center justify-center gap-1 text-xs opacity-80">
                 <Tarjeta tipo="amarilla" /> Amarillas
               </dt>
               <dd className="font-titulos text-3xl font-extrabold">{estadisticas.amarillas}</dd>
             </div>
             <div>
-              <dt className="flex items-center justify-center gap-1 text-[11px] opacity-80">
+              <dt className="flex items-center justify-center gap-1 text-xs opacity-80">
                 <Tarjeta tipo="roja" /> Rojas
               </dt>
               <dd className="font-titulos text-3xl font-extrabold">{estadisticas.rojas}</dd>

@@ -11,14 +11,17 @@
     "test:watch": "vitest",
     "typecheck": "next typegen && tsc --noEmit",
     "ejemplo:generar": "tsx scripts/ejemplo/generar.ts",
-    "planilla:generar": "tsx scripts/planilla/generar-planilla.ts"
+    "planilla:generar": "tsx scripts/planilla/generar-planilla.ts",
+    "iconos:generar": "tsx scripts/marca/generar-iconos.ts"
   },
   "dependencies": {
+    "@serwist/turbopack": "^9.5.13",
     "next": "16.4.0",
     "papaparse": "^5.7.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
+    "serwist": "^9.5.13",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -27,6 +30,7 @@
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
     "exceljs": "^4.4.0",

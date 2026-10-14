@@ -17,7 +17,7 @@ async function ListaEquipos() {
     <ul className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
       {torneo.equipos.map((e) => (
         <li key={e.id}>
-          <Link href={`/equipos/${e.id}`} className="flex min-h-16 items-center gap-3 rounded-2xl bg-superficie p-3 ring-1 ring-borde active:bg-superficie-alt">
+          <Link href={`/equipos/${e.id}`} prefetch={false} className="flex min-h-16 items-center gap-3 rounded-2xl bg-superficie p-3 ring-1 ring-borde active:bg-superficie-alt">
             <EscudoClase equipo={e} />
             <span className="min-w-0 flex-1">
               <span className="block truncate font-semibold">{e.nombre}</span>

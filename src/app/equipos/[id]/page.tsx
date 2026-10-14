@@ -116,7 +116,7 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
               return (
                 <li key={j.id} className="border-b border-borde last:border-0">
                   {mostrarFichas ? (
-                    <Link href={`/jugadores/${j.id}`} className="flex min-h-14 items-center gap-3 px-3 active:bg-superficie-alt">
+                    <Link href={`/jugadores/${j.id}`} prefetch={false} className="flex min-h-14 items-center gap-3 px-3 active:bg-superficie-alt">
                       {contenido}
                     </Link>
                   ) : (

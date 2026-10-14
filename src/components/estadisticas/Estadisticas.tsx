@@ -45,7 +45,7 @@ function Lista({ filas, conFichas, valor }: { filas: FilaStat[]; conFichas: bool
           return (
             <li key={f.jugadorId} className="border-b border-borde last:border-0">
               {conFichas ? (
-                <Link href={`/jugadores/${f.jugadorId}`} className="flex min-h-14 items-center gap-3 px-3 active:bg-superficie-alt">
+                <Link href={`/jugadores/${f.jugadorId}`} prefetch={false} className="flex min-h-14 items-center gap-3 px-3 active:bg-superficie-alt">
                   {contenido}
                 </Link>
               ) : (

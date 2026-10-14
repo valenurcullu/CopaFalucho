@@ -10,7 +10,7 @@ export const fuenteTexto = Montserrat({
 /** Títulos y marcadores: condensada, como las letras del escudo. */
 export const fuenteTitulos = Barlow_Condensed({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["700", "800"],
   variable: "--fuente-titulos",
   display: "swap",
 });

@@ -3,12 +3,21 @@ import { Suspense } from "react";
 import { BarraPestanas } from "@/components/layout/BarraPestanas";
 import { Encabezado } from "@/components/layout/Encabezado";
 import { RegistroNavegacion } from "@/components/layout/RegistroNavegacion";
+import { InvitacionInstalar } from "@/components/pwa/InvitacionInstalar";
+import { ProveedorPwa } from "@/components/pwa/ProveedorPwa";
 import { EstadoDatos } from "@/components/layout/EstadoDatos";
 import { marca } from "@/config/marca";
 import { obtenerTorneo } from "@/lib/torneo";
 import { fuenteTexto, fuenteTitulos } from "@/theme/fuentes";
 import { cssVariablesTema } from "@/theme/variables";
 import "./globals.css";
+
+/**
+ * Cada cuántos segundos se regeneran las páginas (5 minutos: los resultados
+ * se cargan a la noche o al otro día, no hace falta tiempo real). Tiene que
+ * ser un número literal; mantenerlo igual a torneoConfig.revalidarSegundos.
+ */
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: { default: marca.nombreTorneo, template: `%s · ${marca.nombreTorneo}` },
@@ -45,21 +54,24 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <style dangerouslySetInnerHTML={{ __html: cssVariablesTema() }} />
       </head>
       <body className="min-h-dvh">
-        <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-superficie focus:p-3">
-          Saltar al contenido
-        </a>
-        <Encabezado>
-          <Suspense>
-            <EstadoConDatos />
+        <ProveedorPwa>
+          <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-superficie focus:p-3">
+            Saltar al contenido
+          </a>
+          <Encabezado>
+            <Suspense>
+              <EstadoConDatos />
+            </Suspense>
+          </Encabezado>
+          <main id="contenido" className="mx-auto max-w-lg px-safe pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4">
+            {children}
+          </main>
+          <RegistroNavegacion />
+          <Suspense fallback={<BarraPestanas />}>
+            <BarraConDatos />
           </Suspense>
-        </Encabezado>
-        <main id="contenido" className="mx-auto max-w-lg px-safe pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4">
-          {children}
-        </main>
-        <RegistroNavegacion />
-        <Suspense fallback={<BarraPestanas />}>
-          <BarraConDatos />
-        </Suspense>
+          <InvitacionInstalar />
+        </ProveedorPwa>
       </body>
     </html>
   );
