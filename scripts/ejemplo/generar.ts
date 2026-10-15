@@ -18,7 +18,11 @@ const CARPETA = path.join(process.cwd(), "data", "ejemplo");
 const DURACION = 50;
 const CANCHAS = ["Cancha 1", "Cancha 2", "Cancha 3", "Cancha 4"];
 const ZONAS = ["A", "B", "C", "D"];
-const CLASES = Array.from({ length: 16 }, (_, i) => 1993 + i);
+/** 15 clases y un equipo de varias generaciones, como pasa en la copa real. */
+const EQUIPO_VETERANOS = { id: "8YPICO", nombre: "80 y pico", sigla: "80+", alias: "8 y pico, 80 y pico, 80" };
+const CLASES: (number | typeof EQUIPO_VETERANOS)[] = [EQUIPO_VETERANOS, ...Array.from({ length: 15 }, (_, i) => 1994 + i)];
+const idDe = (c: (typeof CLASES)[number]) => (typeof c === "number" ? String(c) : c.id);
+const APODOS = ["Coke", "Mapache", "Rata", "Osito", "Pelado", "Laucha", "Tano", "Ruso", "Negro", "Chino", "Colo", "Flaco", "Gordo", "Toto", "Pipa", "Dumbo"];
 
 type Fila = (string | number | null)[];
 
@@ -26,6 +30,7 @@ interface JugadorEjemplo {
   id: string;
   equipo: string;
   nombre: string;
+  apodo: string | null;
   numero: number;
   posicion: Posicion;
   peso: number;
@@ -43,7 +48,7 @@ const PLANTEL: Posicion[] = [
 
 const PESO_GOL: Record<Posicion, number> = { Arquero: 0.05, Defensor: 1, Mediocampista: 3, Delantero: 6 };
 
-function generarJugadores(azar: Azar, anio: number): JugadorEjemplo[] {
+function generarJugadores(azar: Azar, equipo: string): JugadorEjemplo[] {
   const numerosLibres = azar.mezclar(Array.from({ length: 30 }, (_, i) => i + 2).filter((n) => n !== 12));
   const usados = new Set<string>();
   return PLANTEL.map((posicion, i) => {
@@ -55,8 +60,9 @@ function generarJugadores(azar: Azar, anio: number): JugadorEjemplo[] {
     const altura = azar.entero(posicion === "Arquero" ? 180 : 166, posicion === "Arquero" ? 194 : 190);
     const peso = Math.round((altura - 100) * (0.85 + azar.siguiente() * 0.35));
     return {
-      id: `${anio}-${String(i + 1).padStart(2, "0")}`,
-      equipo: String(anio),
+      id: `${equipo}-${String(i + 1).padStart(2, "0")}`,
+      equipo,
+      apodo: azar.siguiente() < 0.3 ? azar.elegir(APODOS) : null,
       nombre,
       numero,
       posicion,
@@ -104,6 +110,13 @@ export function simularEventos(
   return eventos.sort((a, b) => a.minuto - b.minuto).map((e) => e.fila);
 }
 
+/** Goles de local y visitante según las filas de Eventos de un partido. */
+function contarGoles(eventos: Fila[], localId: string): [number, number] {
+  const goles = eventos.filter((e) => e[1] === "gol" || e[1] === "gol en contra");
+  const local = goles.filter((e) => (e[1] === "gol") === (e[2] === localId)).length;
+  return [local, goles.length - local];
+}
+
 /** Todos contra todos para 4 equipos: 3 fechas de 2 partidos. */
 const ROUND_ROBIN_4: [number, number][][] = [
   [[0, 1], [2, 3]],
@@ -114,7 +127,11 @@ const ROUND_ROBIN_4: [number, number][][] = [
 const FECHAS_ZONA = ["28/11/2026", "29/11/2026", "05/12/2026"];
 
 /** Índices de columnas de la hoja Partidos que se completan al simular. */
-const COL = { estado: 11, penalesLocal: 12, penalesVisitante: 13 };
+const COL = {
+  estado: COLUMNAS.Partidos.indexOf("estado"),
+  penalesLocal: COLUMNAS.Partidos.indexOf("penales_local"),
+  penalesVisitante: COLUMNAS.Partidos.indexOf("penales_visitante"),
+};
 
 function aCrudas(columnas: readonly string[], filas: Fila[]): FilaCruda[] {
   const claves = columnas.map(normalizarColumna);
@@ -162,9 +179,7 @@ function simularFaseFinal(
       eventos.push(...nuevos);
       fila[COL.estado] = paso.estado;
       if (paso.estado !== "finalizado") continue;
-      const goles = nuevos.filter((e) => e[1] === "gol" || e[1] === "gol en contra");
-      const gl = goles.filter((e) => (e[1] === "gol") === (e[2] === p.localId)).length;
-      const gv = goles.length - gl;
+      const [gl, gv] = contarGoles(nuevos, p.localId);
       if (gl === gv) {
         const ganados = azar.entero(3, 5);
         const local = azar.siguiente() < 0.5;
@@ -179,16 +194,20 @@ async function main() {
   const azar = crearAzar(SEMILLA);
 
   // Equipos y sorteo de zonas
-  const sorteo = azar.mezclar(CLASES);
-  const zonaDe = new Map<number, string>();
-  sorteo.forEach((anio, i) => zonaDe.set(anio, ZONAS[Math.floor(i / 4)]));
-  const equipos: Fila[] = CLASES.map((anio) => [String(anio), anio, zonaDe.get(anio)!, null, null]);
+  const sorteo = azar.mezclar(CLASES.map(idDe));
+  const zonaDe = new Map<string, string>();
+  sorteo.forEach((id, i) => zonaDe.set(id, ZONAS[Math.floor(i / 4)]));
+  const equipos: Fila[] = CLASES.map((c) =>
+    typeof c === "number"
+      ? [String(c), c, zonaDe.get(String(c))!, null, null, null, null]
+      : [c.id, null, zonaDe.get(c.id)!, c.nombre, c.sigla, c.alias, null],
+  );
 
   // Jugadores
   const plantel = new Map<string, JugadorEjemplo[]>();
-  for (const anio of CLASES) plantel.set(String(anio), generarJugadores(azar, anio));
+  for (const c of CLASES) plantel.set(idDe(c), generarJugadores(azar, idDe(c)));
   const jugadores: Fila[] = [...plantel.values()].flat().map((j) => [
-    j.id, j.equipo, j.nombre, j.numero, j.posicion, null, j.peso, j.altura,
+    j.id, j.equipo, j.nombre, j.apodo, j.numero, j.posicion, null, j.peso, j.altura,
   ]);
 
   // Fase de zonas: dos turnos por fecha (zonas A-B y C-D), cuatro canchas.
@@ -197,18 +216,20 @@ async function main() {
   let numero = 0;
   ROUND_ROBIN_4.forEach((cruces, f) => {
     ZONAS.forEach((zona, z) => {
-      const integrantes = sorteo.slice(z * 4, z * 4 + 4).map(String);
+      const integrantes = sorteo.slice(z * 4, z * 4 + 4);
       cruces.forEach(([l, v], c) => {
         const id = `Z${String(++numero).padStart(2, "0")}`;
         const local = integrantes[l];
         const visitante = integrantes[v];
         const hora = z < 2 ? "10:00" : "11:15";
         const cancha = CANCHAS[(z % 2) * 2 + c];
+        const delPartido = simularEventos(azar, id, [local, visitante], plantel);
+        const [gl, gv] = contarGoles(delPartido, local);
         partidos.push([
           id, "zona", zona, null, f + 1, FECHAS_ZONA[f], hora, cancha,
-          local, visitante, azar.elegir(ARBITROS), "finalizado", null, null,
+          local, visitante, gl, gv, azar.elegir(sorteo.filter((e) => e !== local && e !== visitante)), "finalizado", null, null,
         ]);
-        eventos.push(...simularEventos(azar, id, [local, visitante], plantel));
+        eventos.push(...delPartido);
       });
     });
   });
@@ -225,7 +246,7 @@ async function main() {
   ];
   finales.forEach(([id, fase, llave, fecha, hora], i) => {
     const cancha = fase === "cuartos" ? CANCHAS[i] : fase === "semis" ? CANCHAS[i - 4] : CANCHAS[0];
-    partidos.push([id, fase, null, llave, null, fecha, hora, cancha, null, null, azar.elegir(ARBITROS), "programado", null, null]);
+    partidos.push([id, fase, null, llave, null, fecha, hora, cancha, null, null, null, null, azar.elegir(ARBITROS), "programado", null, null]);
   });
 
   simularFaseFinal(azar, equipos, partidos, eventos, jugadores, plantel);

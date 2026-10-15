@@ -58,6 +58,16 @@ function primeraRonda(zonas: readonly string[], clasificados: number): [OrigenLl
   return cruces;
 }
 
+/** Cruces por tabla general: el mejor contra el peor, con 1º y 2º en mitades distintas. */
+function primeraRondaGeneral(total: number): [OrigenLlave, OrigenLlave][] {
+  const orden = ordenSembrado(total);
+  const cruces: [OrigenLlave, OrigenLlave][] = [];
+  for (let i = 0; i < orden.length; i += 2) {
+    cruces.push([{ tipo: "general", puesto: orden[i] }, { tipo: "general", puesto: orden[i + 1] }]);
+  }
+  return cruces;
+}
+
 /**
  * Arma el cuadro de fase final a partir de las zonas y de cuántos clasifican
  * por zona. La cantidad total de clasificados tiene que ser 2, 4, 8 o 16.
@@ -66,6 +76,7 @@ export function llavesEstandar(
   zonas: readonly string[],
   clasificadosPorZona: number,
   tercerPuesto = false,
+  cruces: "general" | "zonas" = "zonas",
 ): LlaveConfig[] {
   const total = zonas.length * clasificadosPorZona;
   if (total < 2) return [];
@@ -77,7 +88,7 @@ export function llavesEstandar(
   }
 
   const llaves: LlaveConfig[] = [];
-  let ronda = primeraRonda(zonas, clasificadosPorZona);
+  let ronda = cruces === "general" ? primeraRondaGeneral(total) : primeraRonda(zonas, clasificadosPorZona);
   let equipos = total;
   while (ronda.length > 0) {
     const fase = FASE_POR_EQUIPOS[equipos];
@@ -113,6 +124,8 @@ export function describirOrigen(origen: OrigenLlave, nombreDe: (llaveId: string)
   switch (origen.tipo) {
     case "posicion":
       return `${origen.puesto}° Zona ${origen.zona}`;
+    case "general":
+      return `${origen.puesto}° de la general`;
     case "ganador":
       return `Ganador ${nombreDe(origen.llave)}`;
     case "perdedor":
@@ -137,14 +150,15 @@ export interface LlaveResuelta {
 /**
  * Resuelve qué equipo ocupa cada lugar del cuadro.
  * - `equipoEnPuesto(zona, puesto)`: id del equipo, o null si la zona no terminó
- *   o hay un empate sin resolver en ese puesto.
+ *   o hay un empate sin resolver en ese puesto. Para la tabla general se llama
+ *   con zona null.
  * - `resultado(llaveId, localId, visitanteId)`: ganador y perdedor del partido
  *   de esa llave, si ya se jugó.
  * - `forzados`: equipos cargados a mano en la planilla, que tienen prioridad.
  */
 export function resolverLlaves(
   llaves: readonly LlaveConfig[],
-  equipoEnPuesto: (zona: string, puesto: number) => string | null,
+  equipoEnPuesto: (zona: string | null, puesto: number) => string | null,
   resultado: (llaveId: string, localId: string, visitanteId: string) => ResultadoLlave,
   forzados: (llaveId: string) => { localId: string | null; visitanteId: string | null } = () => ({ localId: null, visitanteId: null }),
 ): LlaveResuelta[] {
@@ -162,6 +176,7 @@ export function resolverLlaves(
 
   const equipoDe = (origen: OrigenLlave): string | null => {
     if (origen.tipo === "posicion") return equipoEnPuesto(origen.zona, origen.puesto);
+    if (origen.tipo === "general") return equipoEnPuesto(null, origen.puesto);
     const previa = resolver(origen.llave);
     if (!previa?.localId || !previa.visitanteId) return null;
     const r = resultados.get(origen.llave)!;

@@ -1,4 +1,5 @@
 import type { Equipo, Jugador, TipoEvento } from "@/domain/tipos";
+import { nombreCorto } from "@/lib/formato";
 import type { PartidoVista } from "./analizar";
 
 /** Evento listo para mostrar: ya se sabe de qué lado va y quién lo hizo. */
@@ -43,7 +44,7 @@ export function aTarjeta(p: PartidoVista, equipos: Map<string, Equipo>, jugadore
       lado,
       minuto: e.minuto,
       jugadorId: e.jugadorId,
-      jugador: e.jugadorId ? (jugadores.get(e.jugadorId)?.nombre ?? null) : null,
+      jugador: e.jugadorId && jugadores.has(e.jugadorId) ? nombreCorto(jugadores.get(e.jugadorId)!) : null,
     };
   });
   return {
@@ -55,7 +56,8 @@ export function aTarjeta(p: PartidoVista, equipos: Map<string, Equipo>, jugadore
     fecha: p.fecha,
     hora: p.hora,
     cancha: p.cancha,
-    arbitro: p.arbitro,
+    // Si arbitra otra clase, se muestra su nombre ("Clase 2000").
+    arbitro: p.arbitroEquipoId ? (equipos.get(p.arbitroEquipoId)?.nombre ?? p.arbitro) : p.arbitro,
     estado: p.estado,
     local: p.localId ? (equipos.get(p.localId) ?? null) : null,
     visitante: p.visitanteId ? (equipos.get(p.visitanteId) ?? null) : null,

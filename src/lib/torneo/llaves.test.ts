@@ -3,7 +3,11 @@ import type { LlaveConfig, OrigenLlave } from "@/domain/config";
 import { ErrorFormato, llavesEstandar, resolverLlaves, type ResultadoLlave } from "./llaves";
 
 const texto = (o: OrigenLlave) =>
-  o.tipo === "posicion" ? `${o.puesto}${o.zona}` : `${o.tipo === "ganador" ? "G" : "P"}-${o.llave}`;
+  o.tipo === "posicion"
+    ? `${o.puesto}${o.zona}`
+    : o.tipo === "general"
+      ? `#${o.puesto}`
+      : `${o.tipo === "ganador" ? "G" : "P"}-${o.llave}`;
 const cruces = (llaves: LlaveConfig[]) => llaves.map((l) => `${l.id}: ${texto(l.local)} v ${texto(l.visitante)}`);
 
 describe("llavesEstandar", () => {
@@ -53,6 +57,18 @@ describe("llavesEstandar", () => {
     expect(tercero && `${texto(tercero.local)} v ${texto(tercero.visitante)}`).toBe("P-S1 v P-S2");
   });
 
+  it("cruces por tabla general: 1º-8º, 4º-5º, 2º-7º, 3º-6º (como en 2024)", () => {
+    expect(cruces(llavesEstandar(["A", "B", "C", "D"], 2, false, "general"))).toEqual([
+      "C1: #1 v #8",
+      "C2: #4 v #5",
+      "C3: #2 v #7",
+      "C4: #3 v #6",
+      "S1: G-C1 v G-C2",
+      "S2: G-C3 v G-C4",
+      "F: G-S1 v G-S2",
+    ]);
+  });
+
   it("rechaza cantidades que no arman un cuadro", () => {
     expect(() => llavesEstandar(["A", "B", "C"], 2)).toThrow(ErrorFormato);
   });
@@ -70,7 +86,7 @@ describe("resolverLlaves", () => {
     C: ["C1", "C2", "C3", "C4"],
     D: ["D1", "D2", "D3", "D4"],
   };
-  const enPuesto = (zona: string, puesto: number) => posiciones[zona][puesto - 1];
+  const enPuesto = (zona: string | null, puesto: number) => (zona ? posiciones[zona][puesto - 1] : null);
 
   /** Gana siempre el local, salvo las llaves indicadas. */
   const resultados =

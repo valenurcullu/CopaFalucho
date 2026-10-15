@@ -39,8 +39,13 @@ export function haceCuanto(desde: Date, ahora = new Date()): string {
   return dias === 1 ? "hace 1 día" : `hace ${dias} días`;
 }
 
-/** Últimos dos dígitos de la clase: 2001 → "01". */
-export const digitosClase = (anio: number) => String(anio).slice(-2);
+/** "Juan Pérez “Coke”", o solo el nombre si no tiene apodo. */
+export function nombreJugador(j: { nombre: string; apodo: string | null }): string {
+  return j.apodo && j.apodo.toLowerCase() !== j.nombre.toLowerCase() ? `${j.nombre} “${j.apodo}”` : j.nombre;
+}
+
+/** Versión corta para listas apretadas: el apodo si tiene, si no el nombre. */
+export const nombreCorto = (j: { nombre: string; apodo: string | null }) => j.apodo ?? j.nombre;
 
 export const plural = (n: number, singular: string, pluralTexto = `${singular}s`) =>
   `${n} ${n === 1 ? singular : pluralTexto}`;

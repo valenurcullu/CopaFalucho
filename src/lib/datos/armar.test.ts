@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest";
 import type { Hoja } from "@/domain/tipos";
 import { armarDatos, type HojasCrudas } from "./armar";
 import { parsearFecha, parsearHora } from "./campos";
-import { leerCsv } from "./csv";
+import { leerCsv, type FilaCruda } from "./csv";
+import { torneoConfig } from "@/config/torneo";
+import { analizarTorneo } from "@/lib/torneo/analizar";
 
 const opciones = { origen: "ejemplo" as const, duracionMinutos: 50 };
 
@@ -27,7 +29,8 @@ describe("datos de ejemplo", () => {
     );
     expect(datos.avisos).toEqual([]);
     expect(datos.equipos).toHaveLength(16);
-    expect(datos.equipos[0].nombre).toMatch(/^Clase \d{4}$/);
+    expect(datos.equipos.find((e) => e.id === "2001")!.nombre).toBe("Clase 2001");
+    expect(datos.equipos.find((e) => e.id === "8YPICO")).toMatchObject({ anio: null, nombre: "80 y pico", sigla: "80+" });
   });
 });
 
@@ -116,7 +119,7 @@ describe("armarDatos", () => {
         Equipos: equiposBase,
         Jugadores: [{ id: "2002-01", equipo: "2002", nombre: "Juan Pérez" }],
         Partidos: [{ id: "Z1", fase: "zona", local: "2001", visitante: "2002", estado: "finalizado" }],
-        Eventos: [{ partido_id: "Z1", tipo: "gol", equipo: "2001", jugador_id: "2002-01", minuto: "10" }],
+        Eventos: [{ partido_id: "Z1", tipo: "gol", equipo: "2001", jugador: "2002-01", minuto: "10" }],
       }),
       opciones,
     );
@@ -138,6 +141,85 @@ describe("armarDatos", () => {
       opciones,
     );
     expect(datos.jugadores[0]).toMatchObject({ pesoKg: 82.5, alturaCm: 181 });
+  });
+});
+
+describe("planilla cargada a mano", () => {
+  const equipos: FilaCruda[] = [
+    { id: "1990", anio: "1990", zona: "A" },
+    { id: "8 y pico", anio: "", zona: "A", nombre: "80 y pico", sigla: "80+", alias: "8ypico, 80" },
+    { id: "1985/86", anio: "1985", zona: "A", nombre: "1985/86" },
+  ];
+
+  it("reconoce los equipos como se escriban y arma ids aptos para links", () => {
+    const datos = armarDatos(
+      hojas({
+        Equipos: equipos,
+        Partidos: [
+          { id: "Z1", local: "90", visitante: "8ypico", estado: "finalizado", goles_local: "2", goles_visitante: "1", arbitro: "1985" },
+          { id: "Z2", local: "80", visitante: "1985/86", estado: "finalizado", arbitro: "Coppola" },
+        ],
+      }),
+      opciones,
+    );
+    expect(datos.avisos).toEqual([]);
+    expect(datos.equipos.map((e) => e.id)).toEqual(["1990", "8YPICO", "1985-86"]);
+    expect(datos.partidos[0]).toMatchObject({ localId: "1990", visitanteId: "8YPICO", golesLocal: 2, golesVisitante: 1, arbitroEquipoId: "1985-86" });
+    expect(datos.partidos[1]).toMatchObject({ localId: "8YPICO", visitanteId: "1985-86", arbitroEquipoId: null, arbitro: "Coppola" });
+  });
+
+  it("encuentra al jugador por apodo o apellido y crea los que no están en Jugadores", () => {
+    const datos = armarDatos(
+      hojas({
+        Equipos: equipos,
+        Jugadores: [
+          { id: "1990-01", equipo: "90", nombre: "Jorge Coke Pérez", apodo: "Coke" },
+          { id: "1990-02", equipo: "1990", nombre: "Martín Monclús" },
+        ],
+        Partidos: [{ id: "Z1", local: "1990", visitante: "8YPICO", estado: "finalizado" }],
+        Eventos: [
+          { partido_id: "Z1", tipo: "gol", equipo: "90", jugador: "coke" },
+          { partido_id: "Z1", tipo: "gol", equipo: "1990", jugador: "monclus" },
+          { partido_id: "Z1", tipo: "gol", equipo: "8ypico", jugador: "4palos cuevas" },
+          { partido_id: "Z1", tipo: "amarilla", equipo: "8 y pico", jugador: "4Palos  Cuevas" },
+        ],
+      }),
+      opciones,
+    );
+    expect(datos.avisos).toEqual([]);
+    expect(datos.eventos.map((e) => e.jugadorId)).toEqual(["1990-01", "1990-02", "8YPICO-4PALOSCUEVAS", "8YPICO-4PALOSCUEVAS"]);
+    expect(datos.jugadores.find((j) => j.id === "8YPICO-4PALOSCUEVAS")).toMatchObject({ nombre: "4palos Cuevas", soloEnEventos: true });
+  });
+
+  it("el resultado cargado a mano manda sobre los goles de Eventos", () => {
+    const datos = armarDatos(
+      hojas({
+        Equipos: equipos,
+        Partidos: [
+          { id: "Z1", local: "1990", visitante: "8YPICO", estado: "finalizado", goles_local: "9", goles_visitante: "0" },
+          { id: "Z2", local: "1990", visitante: "1985/86", estado: "finalizado", goles_local: "1", goles_visitante: "0" },
+        ],
+        Eventos: [
+          { partido_id: "Z1", tipo: "gol", equipo: "1990", jugador: "masacote" },
+          { partido_id: "Z2", tipo: "gol", equipo: "1990" },
+          { partido_id: "Z2", tipo: "gol", equipo: "1990" },
+        ],
+      }),
+      opciones,
+    );
+    const t = analizarTorneo(datos, torneoConfig);
+    expect(t.partidos.find((p) => p.id === "Z1")!.marcador).toEqual({ local: 9, visitante: 0 });
+    // En Z2 hay más goles en Eventos que en el resultado: se avisa.
+    expect(t.avisos.map((a) => a.mensaje)).toEqual([expect.stringContaining("Z2 terminó 1-0 pero en Eventos hay 2-0")]);
+  });
+
+  it("avisa si el resultado está cargado a medias", () => {
+    const datos = armarDatos(
+      hojas({ Equipos: equipos, Partidos: [{ id: "Z1", local: "1990", visitante: "8YPICO", estado: "finalizado", goles_local: "2" }] }),
+      opciones,
+    );
+    expect(datos.partidos[0].golesLocal).toBeNull();
+    expect(datos.avisos[0].mensaje).toContain("un solo equipo");
   });
 });
 

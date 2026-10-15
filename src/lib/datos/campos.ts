@@ -20,21 +20,27 @@ export const texto = (campo: string) =>
 /** Texto opcional: vacío → null. */
 export const textoOpcional = () => z.preprocess(vacioANull, z.string().nullable());
 
-/** Identificador: se compara en mayúsculas y sin espacios ("2001", "z01"). */
-export const id = (campo: string) =>
-  z.preprocess(
-    (v) => {
-      const s = vacioANull(v);
-      return s === null ? null : s.replace(/\s+/g, "").toUpperCase();
-    },
-    z.string({ error: `Falta ${campo}` }),
-  );
+/**
+ * Código comparable y apto para URLs: sin acentos ni espacios, en mayúsculas
+ * y con guion en lugar de otros símbolos. "8 y pico" → "8YPICO", "1985/86" → "1985-86".
+ */
+export function normalizarCodigo(s: string): string {
+  return sinAcentos(s)
+    .toUpperCase()
+    .replace(/\s+/g, "")
+    .replace(/[^A-Z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
-export const idOpcional = () =>
-  z.preprocess((v) => {
-    const s = vacioANull(v);
-    return s === null ? null : s.replace(/\s+/g, "").toUpperCase();
-  }, z.string().nullable());
+const codigo = (v: unknown) => {
+  const s = vacioANull(v);
+  return s === null ? null : normalizarCodigo(s) || null;
+};
+
+/** Identificador: se compara normalizado ("2001", "z01", "8 y pico"). */
+export const id = (campo: string) => z.preprocess(codigo, z.string({ error: `Falta ${campo}` }));
+
+export const idOpcional = () => z.preprocess(codigo, z.string().nullable());
 
 function aNumero(v: unknown): unknown {
   const s = vacioANull(v);

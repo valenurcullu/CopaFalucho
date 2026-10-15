@@ -24,19 +24,21 @@ Desde el celular, con la app **Hojas de cálculo de Google**. La app pública to
 
 ### Un partido, paso a paso
 
-1. En la hoja **Partidos**, buscá el partido y cambiá `estado` a **finalizado** (o **en juego** si lo querés mostrar en vivo). Los estados válidos son `programado`, `en juego` y `finalizado`; la planilla trae un menú desplegable.
-2. En la hoja **Eventos**, agregá **una fila por cada gol y cada tarjeta**:
+1. En la hoja **Partidos**, en la fila del partido, escribí el resultado en `goles_local` y `goles_visitante` y cambiá `estado` a **finalizado** (o **en juego** si lo querés mostrar en vivo). Con eso ya se actualizan las tablas y las llaves.
+2. **Opcional, pero recomendado:** en la hoja **Eventos**, una fila por cada gol y cada tarjeta, para goleadores, tarjetas y el detalle del partido:
 
-   | partido_id | tipo | equipo | jugador_id | minuto |
+   | partido_id | tipo | equipo | jugador | minuto |
    |---|---|---|---|---|
-   | Z07 | gol | 2001 | 2001-09 | 12 |
-   | Z07 | amarilla | 2003 | 2003-04 | 30 |
-   | Z07 | gol en contra | 2003 | 2003-02 | 41 |
+   | Z07 | gol | 2001 | mapache | 12 |
+   | Z07 | amarilla | 90 | Perrone | 30 |
+   | Z07 | gol en contra | 2003 | 2003-02 | |
 
    - `tipo`: `gol`, `gol en contra`, `amarilla` o `roja`.
-   - `equipo`: la clase **del jugador** (en un gol en contra, la del que lo hizo; la app se lo suma al rival).
-   - `jugador_id`: está en la hoja Jugadores. Si no lo sabés, dejalo vacío: el gol cuenta igual para el equipo.
-3. **El resultado no se carga**: la app lo calcula contando los goles de Eventos. Un 0 a 0 es simplemente un partido finalizado sin goles.
+   - `equipo`: el equipo **del jugador**, escrito como quieras (`1990`, `90`, `8ypico`…). En un gol en contra, el del que lo hizo; la app se lo suma al rival.
+   - `jugador`: el apodo, el apellido, el nombre o el id de la hoja Jugadores. Si el jugador no está cargado, la app lo agrega sola con ese nombre, así que goleadores y tarjetas funcionan aunque la hoja Jugadores esté vacía.
+   - `minuto` es opcional.
+3. Si el resultado no está escrito, la app lo calcula con los goles de Eventos. Si está escrito y en Eventos hay **más** goles que en el resultado, lo avisa en `/admin/chequeo`. Que haya menos es normal: no siempre se sabe quién hizo todos los goles.
+4. `árbitro`: un nombre o la clase que arbitra (`2000`); si es una clase, la app muestra "Clase 2000".
 
 ### Fase final (cuartos, semis, final)
 
@@ -59,17 +61,20 @@ Reglas que conviene respetar:
 ## 2. Cómo armar el torneo del año que viene
 
 1. **Copiá la planilla** (Archivo → Hacer una copia) y en la copia:
-   - **Equipos**: una fila por clase. `id` = año (ej. `2002`), `año`, `zona` (A, B, C…). `nombre` es opcional: si queda vacío se muestra "Clase 2002".
+   - **Equipos**: una fila por equipo, con `id` y `zona`.
+     - Para una clase: `id` = `2002` y `año` = `2002`. Se muestra "Clase 2002" y en la planilla se puede escribir `2002` o `02`.
+     - Para un equipo de varias generaciones o con otro nombre: `id` = `8YPICO`, `nombre` = `80 y pico`, `sigla` = `80+` (lo que va adentro del círculo) y `alias` = `8 y pico, 80` (otras formas en que lo escriben, separadas por coma).
    - **Jugadores**: `id` con el formato `año-número de orden` (ej. `2002-07`). Las fotos se cargan con el importador (sección 5).
    - **Partidos**: borrá las filas viejas y cargá el fixture nuevo. Para la fase de zonas: `id` (Z01, Z02…), `fase` = zona, `zona`, `fecha_nro`, `fecha`, `hora`, `cancha`, `local`, `visitante`, `árbitro`, `estado` = programado. Para la fase final: una fila por llave con `fase` y `llave`, sin equipos.
    - **Eventos**: vaciala (dejá solo el encabezado).
 2. **Formato**: en [src/config/torneo.ts](src/config/torneo.ts):
    - `edicion`: el año del torneo.
    - `formato.clasificadosPorZona`: cuántos pasan de cada zona.
+   - `formato.cruces`: `"general"` (como en 2024: los clasificados se ordenan en una tabla general y se cruza 1º-8º, 2º-7º, 3º-6º, 4º-5º) o `"zonas"` (1A-2B, 1B-2A…).
    - `formato.tercerPuesto`: `true` si se juega el partido por el tercer puesto (agregá la fila con llave `T`).
    - `desempate`: el orden de criterios. Opciones: `diferencia_gol`, `goles_a_favor`, `fair_play`, `enfrentamiento_directo`.
    - `puntos` y `fairPlay` (puntos por amarilla y por roja).
-3. **Los cruces se arman solos** según las zonas que haya en la hoja Equipos y los clasificados por zona. La cantidad total de clasificados tiene que ser 2, 4, 8 o 16:
+3. **Los cruces se arman solos** según las zonas que haya en la hoja Equipos y los clasificados por zona. Con `cruces: "general"` se usa la tabla general (en la pantalla Tablas aparece abajo de todo). Con `cruces: "zonas"`, el cuadro queda así; en los dos casos la cantidad total de clasificados tiene que ser 2, 4, 8 o 16:
 
    | Zonas | Pasan por zona | Fase final | Llaves para cargar en Partidos |
    |---|---|---|---|

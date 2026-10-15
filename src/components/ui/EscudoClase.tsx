@@ -1,13 +1,12 @@
 import Image from "next/image";
 import type { Equipo } from "@/domain/tipos";
-import { digitosClase } from "@/lib/formato";
 
-const TAMANIOS = { sm: "size-7 text-xs", md: "size-10 text-base", lg: "size-16 text-2xl" } as const;
+const TAMANIOS = { sm: "size-7 text-[11px]", md: "size-10 text-sm", lg: "size-16 text-2xl" } as const;
 const PIXELES = { sm: 28, md: 40, lg: 64 } as const;
 
 /**
  * Escudo de una clase. Si en la planilla hay escudo_url se usa la imagen;
- * si no, un distintivo con los dos dígitos del año ("'01").
+ * si no, un distintivo con la sigla ("’01", "80+", "RDM").
  */
 export function EscudoClase({ equipo, tamanio = "md" }: { equipo: Equipo | null | undefined; tamanio?: keyof typeof TAMANIOS }) {
   if (equipo?.escudoUrl) {
@@ -29,7 +28,7 @@ export function EscudoClase({ equipo, tamanio = "md" }: { equipo: Equipo | null 
         equipo ? "bg-marca text-marca-texto ring-2 ring-marca-clara" : "border-2 border-dashed border-borde text-texto-suave"
       }`}
     >
-      {equipo ? `’${digitosClase(equipo.anio)}` : "?"}
+      {equipo ? equipo.sigla : "?"}
     </span>
   );
 }

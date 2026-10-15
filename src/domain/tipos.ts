@@ -10,11 +10,15 @@ export type EstadoPartido = "programado" | "en_juego" | "finalizado";
 export type TipoEvento = "gol" | "gol_en_contra" | "amarilla" | "roja";
 
 export interface Equipo {
+  /** Código con el que se lo nombra en la planilla: "2001", "8YPICO", "RDM". */
   id: string;
-  anio: number;
+  /** Año de la clase. Vacío en equipos que no son de un solo año (80 y pico, RDM…). */
+  anio: number | null;
   zona: string | null;
-  /** Nombre a mostrar: el opcional de la planilla o "Clase {año}". */
+  /** Nombre a mostrar: el de la planilla, o "Clase {año}", o el id. */
   nombre: string;
+  /** Texto corto para el distintivo: "’01", "80+", "RDM". */
+  sigla: string;
   escudoUrl: string | null;
 }
 
@@ -33,10 +37,21 @@ export interface Partido {
   /** Puede venir vacío en fase final: se resuelve a partir de la llave. */
   localId: string | null;
   visitanteId: string | null;
+  /**
+   * Resultado cargado a mano. Si está, es el oficial; si no, se calcula con
+   * los goles de Eventos.
+   */
+  golesLocal: number | null;
+  golesVisitante: number | null;
+  /** Texto libre: un nombre, o una clase ("2000") cuando arbitra otro equipo. */
   arbitro: string | null;
+  /** Si el árbitro es un equipo del torneo, su id. */
+  arbitroEquipoId: string | null;
   estado: EstadoPartido;
   penalesLocal: number | null;
   penalesVisitante: number | null;
+  /** Fila de la planilla, para los avisos. */
+  fila: number;
 }
 
 export interface Evento {
@@ -54,11 +69,15 @@ export interface Jugador {
   id: string;
   equipoId: string;
   nombre: string;
+  /** Como lo conocen todos: "Coke", "Mapache". */
+  apodo: string | null;
   numero: number | null;
   posicion: string | null;
   fotoUrl: string | null;
   pesoKg: number | null;
   alturaCm: number | null;
+  /** true si no está en la hoja Jugadores y se creó a partir de un evento. */
+  soloEnEventos: boolean;
 }
 
 export type Hoja = "Equipos" | "Partidos" | "Eventos" | "Jugadores";

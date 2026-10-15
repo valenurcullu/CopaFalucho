@@ -14,7 +14,7 @@ const CARPETA = path.join(process.cwd(), "data");
 const HOJAS = ["Equipos", "Partidos", "Eventos", "Jugadores"] as const;
 
 /** Columnas que se guardan como número; el resto va como texto plano. */
-const NUMERICAS = new Set(["año", "fecha_nro", "penales_local", "penales_visitante", "minuto", "número", "peso_kg", "altura_cm"]);
+const NUMERICAS = new Set(["año", "fecha_nro", "goles_local", "goles_visitante", "penales_local", "penales_visitante", "minuto", "número", "peso_kg", "altura_cm"]);
 
 /** Listas desplegables para que no se carguen valores inválidos. */
 const OPCIONES: Record<string, string[]> = {
@@ -26,15 +26,17 @@ const OPCIONES: Record<string, string[]> = {
 const INSTRUCCIONES = [
   ["Copa Falucho: planilla de datos"],
   [""],
-  ["Los nombres de las pestañas y de las columnas tienen que quedar exactamente así."],
-  ["Equipos: id = año de la clase (ej. 2001). nombre es opcional: si está vacío se muestra \"Clase 2001\"."],
-  ["Partidos: estado = programado / en juego / finalizado. El resultado NO se carga: sale de los goles de Eventos."],
+  ["Los nombres de las pestañas y de las columnas tienen que quedar exactamente así. La app se actualiza sola en 5 a 10 minutos."],
+  ["Equipos: id = cómo se lo nombra (2001, 8YPICO, RDM). año, nombre y sigla son opcionales. En alias van otras formas de escribirlo, separadas por coma (\"8 y pico, 80\")."],
+  ["Partidos: al terminar, escribí goles_local y goles_visitante y poné estado = finalizado. Estados: programado / en juego / finalizado."],
   ["Partidos de fase final: completá la columna llave (C1, S1, F…) y dejá local y visitante vacíos: la app los completa sola."],
   ["Si una llave termina empatada, cargá penales_local y penales_visitante."],
-  ["Eventos: una fila por gol o tarjeta. equipo = equipo del jugador (en un gol en contra, el equipo del que lo hizo)."],
-  ["Jugadores: id = año-número de orden (ej. 2001-07). foto_url opcional; las fotos importadas se cargan solas."],
+  ["árbitro: un nombre, o la clase que arbitra (\"2000\")."],
+  ["Eventos (opcional pero recomendado): una fila por gol o tarjeta. jugador = id, nombre, apellido o apodo (\"coke\"). Si no está en Jugadores, se agrega solo."],
+  ["Jugadores: id = equipo-número de orden (2001-07). apodo, foto_url, peso y altura son opcionales."],
   ["Fechas en formato dd/mm/aaaa y horas en hh:mm."],
 ];
+
 
 async function main() {
   const libro = new ExcelJS.Workbook();

@@ -13,6 +13,10 @@ const ALIAS_COLUMNAS: Record<string, string> = {
   altura: "altura_cm",
   nro: "numero",
   fecha_numero: "fecha_nro",
+  jugador_id: "jugador",
+  goles_l: "goles_local",
+  goles_v: "goles_visitante",
+  referee: "arbitro",
 };
 
 /** "Año", " Número " o "fecha nro" → "anio", "numero", "fecha_nro". */

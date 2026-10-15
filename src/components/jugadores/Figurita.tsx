@@ -29,7 +29,7 @@ function Dato({ titulo, valor }: { titulo: string; valor: string }) {
  */
 export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAltura }: Props) {
   const datos: [string, string][] = [
-    ["Clase", equipo ? String(equipo.anio) : "–"],
+    [equipo?.anio ? "Clase" : "Equipo", equipo ? String(equipo.anio ?? equipo.nombre) : "–"],
     ["Posición", jugador.posicion ?? "–"],
   ];
   if (mostrarPesoAltura) {
@@ -67,6 +67,7 @@ export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAl
           )}
           <div className="absolute inset-x-0 bottom-0 bg-secundario px-4 py-2 text-secundario-texto">
             <h1 className="truncate font-titulos text-2xl font-extrabold uppercase leading-tight tracking-wide">{jugador.nombre}</h1>
+            {jugador.apodo && <p className="truncate text-sm font-semibold opacity-90">“{jugador.apodo}”</p>}
           </div>
         </div>
 

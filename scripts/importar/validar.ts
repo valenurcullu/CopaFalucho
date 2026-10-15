@@ -5,6 +5,7 @@ export interface JugadorImportado {
   id: string;
   equipo: string;
   nombre: string;
+  apodo: string | null;
   numero: number | null;
   posicion: string | null;
   foto_url: string | null;

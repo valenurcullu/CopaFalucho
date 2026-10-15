@@ -9,7 +9,7 @@ import { EscudoClase } from "@/components/ui/EscudoClase";
 import { IconoFlecha, IconoPelota } from "@/components/ui/iconos";
 import { Racha } from "@/components/ui/Racha";
 import { torneoConfig } from "@/config/torneo";
-import { formatearDiaCorto } from "@/lib/formato";
+import { formatearDiaCorto, nombreJugador } from "@/lib/formato";
 import { obtenerTorneo } from "@/lib/torneo";
 import { aTarjeta, indices } from "@/lib/torneo/vista";
 
@@ -102,7 +102,7 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
                 <>
                   <span className="w-8 shrink-0 text-center font-titulos text-xl font-bold text-enlace">{j.numero ?? "–"}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold">{j.nombre}</span>
+                    <span className="block truncate font-semibold">{nombreJugador(j)}</span>
                     {j.posicion && <span className="block text-xs text-texto-suave">{j.posicion}</span>}
                   </span>
                   {stats?.goles ? (

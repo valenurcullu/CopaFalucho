@@ -3,7 +3,7 @@ import type { DatosTorneo, Equipo, Evento, Jugador, Partido } from "@/domain/tip
 import { tablaGoleadores, tablaTarjetas, estadisticasPorJugador, type EstadisticasJugador, type FilaGoleador, type FilaTarjetas } from "./estadisticas";
 import { ErrorFormato, llavesEstandar, ORDEN_FASES, resolverLlaves } from "./llaves";
 import { calcularMarcador, ganadorDe, type Marcador } from "./marcador";
-import { calcularTabla, type FilaTabla } from "./tablas";
+import { calcularTabla, tablaGeneral, type FilaGeneral, type FilaTabla } from "./tablas";
 
 export type Resultado = "G" | "E" | "P";
 
@@ -43,6 +43,8 @@ export interface Torneo {
   jugadores: Jugador[];
   partidos: PartidoVista[];
   zonas: ZonaVista[];
+  /** Clasificados de todas las zonas ordenados entre sí (para los cruces "general"). */
+  general: FilaGeneral[];
   llaves: LlaveVista[];
   goleadores: FilaGoleador[];
   tarjetas: FilaTarjetas[];
@@ -74,8 +76,28 @@ export function analizarTorneo(datos: DatosTorneo, config: TorneoConfig, largoRa
   for (const lista of eventosPorPartido.values()) lista.sort((a, b) => (a.minuto ?? 999) - (b.minuto ?? 999));
   const eventosDe = (id: string) => eventosPorPartido.get(id) ?? [];
 
-  const marcadorDe = (p: Partido, localId: string | null, visitanteId: string | null) =>
-    p.estado === "programado" || !localId || !visitanteId ? null : calcularMarcador(localId, visitanteId, eventosDe(p.id));
+  const avisos = [...datos.avisos];
+
+  /** Resultado cargado a mano si está; si no, los goles de Eventos. */
+  const marcadorDe = (p: Partido, localId: string | null, visitanteId: string | null): Marcador | null => {
+    if (p.estado === "programado" || !localId || !visitanteId) return null;
+    if (p.golesLocal !== null && p.golesVisitante !== null) return { local: p.golesLocal, visitante: p.golesVisitante };
+    return calcularMarcador(localId, visitanteId, eventosDe(p.id));
+  };
+
+  // Si hay resultado cargado y los goles de Eventos son más, algo está mal cargado.
+  for (const p of datos.partidos) {
+    if (p.golesLocal === null || p.golesVisitante === null || !p.localId || !p.visitanteId) continue;
+    const segunEventos = calcularMarcador(p.localId, p.visitanteId, eventosDe(p.id));
+    if (segunEventos.local > p.golesLocal || segunEventos.visitante > p.golesVisitante) {
+      avisos.push({
+        nivel: "advertencia",
+        hoja: "Partidos",
+        fila: p.fila,
+        mensaje: `El partido ${p.id} terminó ${p.golesLocal}-${p.golesVisitante} pero en Eventos hay ${segunEventos.local}-${segunEventos.visitante} en goles`,
+      });
+    }
+  }
 
   // Zonas
   const nombresZonas = [...new Set(datos.equipos.map((e) => e.zona).filter((z): z is string => !!z))].sort();
@@ -98,7 +120,7 @@ export function analizarTorneo(datos: DatosTorneo, config: TorneoConfig, largoRa
   try {
     configLlaves =
       config.formato.llaves === "auto"
-        ? llavesEstandar(nombresZonas, config.formato.clasificadosPorZona, config.formato.tercerPuesto)
+        ? llavesEstandar(nombresZonas, config.formato.clasificadosPorZona, config.formato.tercerPuesto, config.formato.cruces)
         : config.formato.llaves;
   } catch (error) {
     if (!(error instanceof ErrorFormato)) throw error;
@@ -108,7 +130,14 @@ export function analizarTorneo(datos: DatosTorneo, config: TorneoConfig, largoRa
   const partidoDeLlave = new Map<string, Partido>();
   for (const p of datos.partidos) if (p.fase !== "zona" && p.llave) partidoDeLlave.set(p.llave, p);
 
-  const equipoEnPuesto = (zona: string, puesto: number) => {
+  const general = tablaGeneral(zonas, config.formato.clasificadosPorZona, config);
+  const zonasCompletas = zonas.length > 0 && zonas.every((z) => z.completa);
+
+  const equipoEnPuesto = (zona: string | null, puesto: number) => {
+    if (zona === null) {
+      const fila = general[puesto - 1];
+      return zonasCompletas && fila && !fila.empateSinResolver ? fila.equipoId : null;
+    }
     const z = zonas.find((x) => x.zona === zona);
     const fila = z?.tabla[puesto - 1];
     if (!z?.completa || !fila || fila.empateSinResolver) return null;
@@ -174,10 +203,11 @@ export function analizarTorneo(datos: DatosTorneo, config: TorneoConfig, largoRa
   }
 
   return {
-    equipos: [...datos.equipos].sort((a, b) => a.anio - b.anio),
+    equipos: [...datos.equipos].sort((a, b) => (a.anio ?? 0) - (b.anio ?? 0) || a.nombre.localeCompare(b.nombre, "es")),
     jugadores: datos.jugadores,
     partidos,
     zonas,
+    general,
     llaves: llavesResueltas.map((l) => ({
       id: l.config.id,
       fase: l.config.fase,
@@ -194,7 +224,7 @@ export function analizarTorneo(datos: DatosTorneo, config: TorneoConfig, largoRa
     rachas,
     estadisticasJugadores: Object.fromEntries(estadisticasPorJugador(datos.eventos)),
     erroresFormato,
-    avisos: datos.avisos,
+    avisos,
     origen: datos.origen,
     actualizadoEn: datos.actualizadoEn,
   };

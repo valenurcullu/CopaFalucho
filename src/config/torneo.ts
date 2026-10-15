@@ -12,6 +12,7 @@ export const torneoConfig: TorneoConfig = {
   fairPlay: { amarilla: 1, roja: 3 },
   formato: {
     clasificadosPorZona: 2,
+    cruces: "general",
     tercerPuesto: false,
     llaves: "auto",
   },

@@ -51,7 +51,7 @@ describe("validarImportacion", () => {
 
 describe("completarFotos", () => {
   const jugador = (id: string, fotoUrl: string | null) => ({
-    id, equipoId: "2001", nombre: id, numero: null, posicion: null, fotoUrl, pesoKg: null, alturaCm: null,
+    id, equipoId: "2001", nombre: id, apodo: null, numero: null, posicion: null, fotoUrl, pesoKg: null, alturaCm: null, soloEnEventos: false,
   });
 
   it("usa la foto importada si la planilla no trae foto_url", () => {

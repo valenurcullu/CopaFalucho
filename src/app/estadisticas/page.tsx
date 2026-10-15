@@ -4,6 +4,7 @@ import { Estadisticas, type FilaStat } from "@/components/estadisticas/Estadisti
 import { EsqueletoLista, TituloPagina } from "@/components/ui/basicos";
 import { torneoConfig } from "@/config/torneo";
 import { obtenerTorneo } from "@/lib/torneo";
+import { nombreJugador } from "@/lib/formato";
 import { indices } from "@/lib/torneo/vista";
 
 export const metadata: Metadata = { title: "Estadísticas" };
@@ -16,7 +17,7 @@ async function EstadisticasConDatos() {
     return {
       posicion: f.posicion,
       jugadorId: f.jugadorId,
-      nombre: j?.nombre ?? f.jugadorId,
+      nombre: j ? nombreJugador(j) : f.jugadorId,
       numero: j?.numero ?? null,
       equipo: equipos.get(f.equipoId)?.nombre ?? "",
     };

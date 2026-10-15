@@ -105,7 +105,7 @@ async function main() {
   await writeFile(MANIFIESTO, JSON.stringify(conFoto, null, 2) + "\n");
 
   const filas = jugadores.map((j) => [
-    j.id, j.equipo, j.nombre, j.numero, j.posicion,
+    j.id, j.equipo, j.nombre, j.apodo, j.numero, j.posicion,
     fotos.has(j.id) ? rutaPublica(j.id) : j.foto_url,
     j.peso_kg, j.altura_cm,
   ]);

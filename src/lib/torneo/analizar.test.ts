@@ -9,21 +9,22 @@ const config: TorneoConfig = {
   puntos: { victoria: 3, empate: 1, derrota: 0 },
   desempate: ["diferencia_gol", "goles_a_favor", "fair_play"],
   fairPlay: { amarilla: 1, roja: 3 },
-  formato: { clasificadosPorZona: 2, tercerPuesto: false, llaves: "auto" },
+  formato: { clasificadosPorZona: 2, cruces: "zonas", tercerPuesto: false, llaves: "auto" },
   duracionMinutos: 50,
   jugadores: { mostrarFichas: true, mostrarPesoAltura: true },
   revalidarSegundos: 30,
 };
 
-const equipo = (id: string, zona: string) => ({ id, anio: Number(id), zona, nombre: `Clase ${id}`, escudoUrl: null });
+const equipo = (id: string, zona: string) => ({ id, anio: Number(id), zona, nombre: `Clase ${id}`, sigla: id.slice(-2), escudoUrl: null });
 const jugador = (id: string, equipoId: string, nombre: string) => ({
-  id, equipoId, nombre, numero: null, posicion: null, fotoUrl: null, pesoKg: null, alturaCm: null,
+  id, equipoId, nombre, apodo: null, numero: null, posicion: null, fotoUrl: null, pesoKg: null, alturaCm: null, soloEnEventos: false,
 });
 
 function partido(id: string, datos: Partial<Partido>): Partido {
   return {
     id, fase: "zona", zona: null, llave: null, fechaNro: null, fecha: "2026-12-05", hora: "10:00", cancha: null,
-    localId: null, visitanteId: null, arbitro: null, estado: "finalizado", penalesLocal: null, penalesVisitante: null,
+    localId: null, visitanteId: null, golesLocal: null, golesVisitante: null, arbitro: null, arbitroEquipoId: null,
+    estado: "finalizado", penalesLocal: null, penalesVisitante: null, fila: 2,
     ...datos,
   };
 }

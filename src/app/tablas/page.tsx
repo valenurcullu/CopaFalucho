@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { TablaGeneral } from "@/components/tablas/TablaGeneral";
 import { TablaZona } from "@/components/tablas/TablaZona";
 import { EsqueletoLista, TituloPagina, Vacio } from "@/components/ui/basicos";
 import { torneoConfig } from "@/config/torneo";
@@ -26,6 +27,9 @@ async function Tablas() {
         {torneo.zonas.map((z) => (
           <TablaZona key={z.zona} zona={z} equipos={equipos} rachas={torneo.rachas} clasificados={clasificadosPorZona} />
         ))}
+        {torneoConfig.formato.cruces === "general" && torneo.general.length > 1 && (
+          <TablaGeneral filas={torneo.general} equipos={equipos} completa={torneo.zonas.every((z) => z.completa)} />
+        )}
       </div>
       <div className="mt-4 space-y-1 text-xs text-texto-suave">
         <p className="flex items-center gap-2">
