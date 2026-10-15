@@ -141,7 +141,7 @@ El QR tiene corrección de errores alta: se sigue leyendo aunque el cartel se mo
 
 ### Importar el álbum
 
-Necesitás un CSV con las columnas de la hoja Jugadores (`id, equipo, nombre, número, posición, peso_kg, altura_cm`) y una carpeta con las fotos, cada una con el **id del jugador como nombre de archivo** (`2001-07.jpg`). Se aceptan jpg, png, webp, avif y tiff; mayúsculas o minúsculas da igual.
+Necesitás un CSV con las columnas de la hoja Jugadores (`id, equipo, nombre, apodo, número, posición, peso_kg, altura_cm`; apodo, peso y altura son opcionales) y una carpeta con las fotos, cada una con el **id del jugador como nombre de archivo** (`2001-07.jpg`). Se aceptan jpg, png, webp, avif y tiff; mayúsculas o minúsculas da igual.
 
 ```bash
 # Solo revisar, sin escribir nada:
