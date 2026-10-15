@@ -26,7 +26,7 @@ export function EscudoClase({ equipo, tamanio = "md" }: { equipo: Equipo | null 
     <span
       aria-hidden="true"
       className={`${TAMANIOS[tamanio]} grid shrink-0 place-items-center rounded-full font-titulos font-extrabold leading-none ${
-        equipo ? "bg-marca text-acento ring-2 ring-acento/70" : "border-2 border-dashed border-borde text-texto-suave"
+        equipo ? "bg-marca text-marca-texto ring-2 ring-marca-clara" : "border-2 border-dashed border-borde text-texto-suave"
       }`}
     >
       {equipo ? `’${digitosClase(equipo.anio)}` : "?"}

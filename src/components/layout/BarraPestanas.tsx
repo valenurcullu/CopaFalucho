@@ -40,10 +40,10 @@ export function BarraPestanas({ hayEnVivo = false }: { hayEnVivo?: boolean }) {
                 href={p.href}
                 aria-current={activa ? "page" : undefined}
                 className={`relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
-                  activa ? "text-marca dark:text-acento" : "text-texto-suave"
+                  activa ? "text-marca" : "text-texto-suave"
                 }`}
               >
-                <span className={`relative grid h-7 w-12 place-items-center rounded-full transition-colors ${activa ? "bg-marca/12 dark:bg-acento/15" : ""}`}>
+                <span className={`relative grid h-7 w-12 place-items-center rounded-full transition-colors ${activa ? "bg-marca/10" : ""}`}>
                   <p.Icono className="size-[22px]" />
                   {p.href === "/" && hayEnVivo && (
                     <span className="absolute right-1.5 top-0 size-2.5 rounded-full bg-vivo ring-2 ring-superficie">

@@ -30,7 +30,7 @@ export function BotonCompartir({ titulo, texto }: { titulo: string; texto: strin
     <button
       type="button"
       onClick={compartir}
-      className="mx-auto mt-4 flex min-h-11 items-center gap-2 rounded-full bg-marca px-5 font-semibold text-marca-texto dark:bg-acento dark:text-acento-texto"
+      className="mx-auto mt-4 flex min-h-11 items-center gap-2 rounded-full bg-marca px-5 font-semibold text-marca-texto"
     >
       <IconoCompartir className="size-5" />
       <span aria-live="polite">{copiado ? "Link copiado" : "Compartir figurita"}</span>

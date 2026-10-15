@@ -31,10 +31,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: marca.colores.claro.marca },
-    { media: "(prefers-color-scheme: dark)", color: marca.colores.oscuro.fondo },
-  ],
+  themeColor: marca.modoOscuro
+    ? [
+        { media: "(prefers-color-scheme: light)", color: marca.colores.claro.marca },
+        { media: "(prefers-color-scheme: dark)", color: marca.colores.oscuro.fondo },
+      ]
+    : marca.colores.claro.marca,
 };
 
 async function EstadoConDatos() {

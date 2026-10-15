@@ -101,7 +101,7 @@ export function Cuadro({ cruces, campeon }: { cruces: CruceCuadro[]; campeon: Eq
         <section aria-label="Campeón" className="flex snap-start flex-col">
           <h2 className="mb-2 font-titulos text-lg font-bold uppercase tracking-wide text-texto-suave">Campeón</h2>
           <div className="flex flex-1 flex-col justify-around gap-3">
-            <div className="grid w-48 place-items-center gap-2 rounded-xl bg-marca p-4 text-center text-marca-texto ring-2 ring-acento">
+            <div className="grid w-48 place-items-center gap-2 rounded-xl bg-marca p-4 text-center text-marca-texto ring-4 ring-secundario">
               <span aria-hidden="true" className="text-3xl">🏆</span>
               {campeon ? (
                 <>

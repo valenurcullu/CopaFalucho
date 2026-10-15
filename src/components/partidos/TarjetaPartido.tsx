@@ -83,7 +83,7 @@ export function TarjetaPartido({ partido: p, conFichas, mostrarFecha }: Props) {
           {mostrarFecha && <>{mostrarFecha} · </>}
           {etiquetaFase(p)}
         </span>
-        {enJuego ? <EnVivo /> : finalizado ? <Insignia>Final</Insignia> : <Insignia className="bg-acento/25 text-texto">{p.hora ?? "A conf."}</Insignia>}
+        {enJuego ? <EnVivo /> : finalizado ? <Insignia>Final</Insignia> : <Insignia className="bg-marca/10 text-marca">{p.hora ?? "A conf."}</Insignia>}
       </div>
 
       <div className="flex flex-col gap-1">

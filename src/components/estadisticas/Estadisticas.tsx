@@ -29,7 +29,7 @@ function Lista({ filas, conFichas, valor }: { filas: FilaStat[]; conFichas: bool
           const repetida = i > 0 && visibles[i - 1].posicion === f.posicion;
           const contenido = (
             <>
-              <span className={`w-7 shrink-0 text-center font-titulos text-lg font-bold ${f.posicion <= 3 ? "text-marca dark:text-acento" : "text-texto-suave"}`}>
+              <span className={`w-7 shrink-0 text-center font-titulos text-lg font-bold ${f.posicion <= 3 ? "text-enlace" : "text-texto-suave"}`}>
                 {repetida ? "" : f.posicion}
               </span>
               <span className="min-w-0 flex-1">
@@ -56,7 +56,7 @@ function Lista({ filas, conFichas, valor }: { filas: FilaStat[]; conFichas: bool
         })}
       </ol>
       {filas.length > VISIBLES && (
-        <button type="button" onClick={() => setTodas(!todas)} className="min-h-12 w-full border-t border-borde text-sm font-semibold text-marca dark:text-acento">
+        <button type="button" onClick={() => setTodas(!todas)} className="min-h-12 w-full border-t border-borde text-sm font-semibold text-enlace">
           {todas ? "Ver menos" : `Ver los ${filas.length}`}
         </button>
       )}

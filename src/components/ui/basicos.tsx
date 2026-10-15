@@ -7,8 +7,10 @@ export function Tarjeta({ children, className = "", as: Etiqueta = "div" }: { ch
 export function TituloPagina({ children, bajada }: { children: ReactNode; bajada?: ReactNode }) {
   return (
     <header className="mb-4">
-      <h1 className="font-titulos text-3xl font-extrabold uppercase tracking-wide">{children}</h1>
-      {bajada && <p className="text-sm text-texto-suave">{bajada}</p>}
+      <h1 className="-ml-4 inline-block rounded-r-full bg-marca py-1.5 pl-4 pr-8 font-titulos text-3xl font-extrabold uppercase tracking-wide text-marca-texto">
+        {children}
+      </h1>
+      {bajada && <p className="mt-2 text-sm text-texto-suave">{bajada}</p>}
     </header>
   );
 }
@@ -16,7 +18,7 @@ export function TituloPagina({ children, bajada }: { children: ReactNode; bajada
 export function TituloSeccion({ children, id, extra }: { children: ReactNode; id?: string; extra?: ReactNode }) {
   return (
     <div className="mb-2 mt-6 flex items-baseline justify-between gap-2 first:mt-0">
-      <h2 id={id} className="font-titulos text-xl font-bold uppercase tracking-wide">
+      <h2 id={id} className="-ml-4 inline-block rounded-r-full bg-secundario py-1 pl-4 pr-6 font-titulos text-xl font-bold uppercase tracking-wide text-secundario-texto">
         {children}
       </h2>
       {extra}

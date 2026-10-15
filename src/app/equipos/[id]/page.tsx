@@ -100,7 +100,7 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
               const stats = torneo.estadisticasJugadores[j.id];
               const contenido = (
                 <>
-                  <span className="w-8 shrink-0 text-center font-titulos text-xl font-bold text-marca dark:text-acento">{j.numero ?? "–"}</span>
+                  <span className="w-8 shrink-0 text-center font-titulos text-xl font-bold text-enlace">{j.numero ?? "–"}</span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold">{j.nombre}</span>
                     {j.posicion && <span className="block text-xs text-texto-suave">{j.posicion}</span>}

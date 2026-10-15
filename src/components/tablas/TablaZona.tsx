@@ -23,7 +23,7 @@ const COLUMNAS = [
 export function TablaZona({ zona, equipos, rachas, clasificados }: Props) {
   return (
     <Tarjeta as="section" className="overflow-hidden">
-      <div className="flex items-center justify-between bg-marca px-4 py-2 text-marca-texto">
+      <div className="flex items-center justify-between bg-secundario px-4 py-2 text-secundario-texto">
         <h2 className="font-titulos text-xl font-bold uppercase tracking-wide">Zona {zona.zona}</h2>
         <span className="text-xs opacity-85">{zona.completa ? "Terminada" : "En curso"}</span>
       </div>
@@ -52,8 +52,8 @@ export function TablaZona({ zona, equipos, rachas, clasificados }: Props) {
             const equipo = equipos.get(f.equipoId);
             const clasifica = f.posicion <= clasificados;
             return (
-              <tr key={f.equipoId} className={`border-t border-borde ${clasifica ? "bg-acento/12" : ""}`}>
-                <td className={`py-2 pl-3 font-titulos text-lg font-bold ${clasifica ? "border-l-4 border-acento pl-2" : ""}`}>
+              <tr key={f.equipoId} className={`border-t border-borde ${clasifica ? "bg-marca/8" : ""}`}>
+                <td className={`py-2 pl-3 font-titulos text-lg font-bold ${clasifica ? "border-l-4 border-marca pl-2 text-marca" : ""}`}>
                   {f.posicion}
                   {zona.completa && f.empateSinResolver && (
                     <abbr title="Empate sin resolver con los criterios configurados" className="ml-0.5 text-xs text-derrota no-underline">
@@ -68,7 +68,7 @@ export function TablaZona({ zona, equipos, rachas, clasificados }: Props) {
                       <span className="block truncate font-semibold">{equipo?.nombre ?? f.equipoId}</span>
                       <span className="flex items-center gap-1.5">
                         <Racha resultados={rachas[f.equipoId] ?? []} />
-                        {zona.completa && clasifica && <span className="text-[10px] font-bold uppercase tracking-wide text-victoria">Clasificado</span>}
+                        {zona.completa && clasifica && <span className="text-[10px] font-bold uppercase tracking-wide text-marca">Clasificado</span>}
                       </span>
                     </span>
                   </Link>

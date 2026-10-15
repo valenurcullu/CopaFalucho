@@ -6,6 +6,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import ExcelJS from "exceljs";
+import { marca } from "../../src/config/marca";
 import { leerCsv } from "../../src/lib/datos/csv";
 import { COLUMNAS } from "../../src/lib/datos/esquemas";
 
@@ -62,7 +63,7 @@ async function main() {
 
     const encabezado = ws.getRow(1);
     encabezado.font = { bold: true, color: { argb: "FFFFFFFF" } };
-    encabezado.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF303083" } };
+    encabezado.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${marca.colores.claro.marca.slice(1)}` } };
 
     columnas.forEach((titulo, i) => {
       const opciones = OPCIONES[titulo];

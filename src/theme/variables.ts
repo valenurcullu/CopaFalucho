@@ -14,6 +14,7 @@ function declaraciones(colores: ColoresTema): string {
  */
 export function cssVariablesTema(): string {
   const { claro, oscuro } = marca.colores;
+  if (!marca.modoOscuro) return `:root{color-scheme:light;${declaraciones(claro)}}`;
   return [
     `:root{color-scheme:light dark;${declaraciones(claro)}}`,
     `@media (prefers-color-scheme: dark){:root{${declaraciones(oscuro)}}}`,

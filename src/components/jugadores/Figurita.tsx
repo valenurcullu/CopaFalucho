@@ -40,11 +40,11 @@ export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAl
   return (
     <article
       aria-label={`Figurita de ${jugador.nombre}`}
-      className="mx-auto w-full max-w-sm rounded-[1.75rem] bg-linear-to-b from-acento to-figurita-marco p-2 shadow-xl"
+      className="mx-auto w-full max-w-sm rounded-[1.75rem] bg-linear-to-b from-secundario to-figurita-marco p-2 shadow-xl"
     >
       <div className="overflow-hidden rounded-[1.35rem] bg-figurita-fondo text-white">
         <div className="flex items-center justify-between px-4 py-2">
-          <span className="font-titulos text-sm font-bold uppercase tracking-[0.2em] text-acento">
+          <span className="font-titulos text-sm font-bold uppercase tracking-[0.2em] text-white">
             {marca.nombreTorneo} {edicion}
           </span>
           <Image src={marca.logo.src} alt="" width={20} height={30} className="h-7 w-auto" />
@@ -53,7 +53,7 @@ export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAl
         <div className="relative aspect-[4/5] bg-radial-[at_50%_30%] from-figurita-brillo to-figurita-fondo to-70%">
           <FotoJugador src={jugador.fotoUrl} nombre={jugador.nombre} prioridad />
           {jugador.numero !== null && (
-            <span className="absolute left-3 top-2 font-titulos text-6xl font-extrabold leading-none text-acento drop-shadow-[0_2px_2px_rgba(0,0,0,0.6)]">
+            <span className="absolute left-3 top-2 font-titulos text-6xl font-extrabold leading-none text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.6)]">
               {jugador.numero}
             </span>
           )}
@@ -65,7 +65,7 @@ export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAl
               {equipo.nombre}
             </Link>
           )}
-          <div className="absolute inset-x-0 bottom-0 bg-acento px-4 py-2 text-acento-texto">
+          <div className="absolute inset-x-0 bottom-0 bg-secundario px-4 py-2 text-secundario-texto">
             <h1 className="truncate font-titulos text-2xl font-extrabold uppercase leading-tight tracking-wide">{jugador.nombre}</h1>
           </div>
         </div>
@@ -83,7 +83,7 @@ export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAl
               <dt className="flex items-center justify-center gap-1 text-xs opacity-80">
                 <IconoPelota /> Goles
               </dt>
-              <dd className="font-titulos text-3xl font-extrabold text-acento">{estadisticas.goles}</dd>
+              <dd className="font-titulos text-3xl font-extrabold">{estadisticas.goles}</dd>
             </div>
             <div>
               <dt className="flex items-center justify-center gap-1 text-xs opacity-80">

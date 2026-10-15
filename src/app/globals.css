@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Los colores del modo oscuro salen de las variables de marca.ts; no se usa la variante dark: de Tailwind. */
+@custom-variant dark (&:where(.modo-oscuro, .modo-oscuro *));
+
 /*
  * Los valores de color viven en src/config/marca.ts y se inyectan como
  * variables --c-* desde el layout. Acá solo se exponen a Tailwind.
@@ -13,6 +16,10 @@
   --color-texto-suave: var(--c-texto-suave);
   --color-marca: var(--c-marca);
   --color-marca-texto: var(--c-marca-texto);
+  --color-marca-clara: var(--c-marca-clara);
+  --color-secundario: var(--c-secundario);
+  --color-secundario-texto: var(--c-secundario-texto);
+  --color-enlace: var(--c-enlace);
   --color-acento: var(--c-acento);
   --color-acento-texto: var(--c-acento-texto);
   --color-vivo: var(--c-vivo);

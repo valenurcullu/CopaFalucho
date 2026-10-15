@@ -29,7 +29,7 @@ async function Tablas() {
       </div>
       <div className="mt-4 space-y-1 text-xs text-texto-suave">
         <p className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-sm border-l-4 border-acento bg-acento/20" />
+          <span className="inline-block h-3 w-3 rounded-sm border-l-4 border-marca bg-marca/10" />
           {clasificadosPorZona === 1 ? "El primero clasifica" : `Los ${clasificadosPorZona} primeros clasifican`} a la fase final.
         </p>
         <p>

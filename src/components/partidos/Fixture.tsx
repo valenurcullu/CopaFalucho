@@ -23,7 +23,7 @@ function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => v
       onClick={onClick}
       aria-pressed={activo}
       className={`min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors ${
-        activo ? "bg-marca text-marca-texto dark:bg-acento dark:text-acento-texto" : "bg-superficie text-texto ring-1 ring-borde"
+        activo ? "bg-marca text-marca-texto" : "bg-superficie text-marca ring-1 ring-borde"
       }`}
     >
       {children}
@@ -123,7 +123,7 @@ export function Fixture({ partidos, equipos, zonas, conFichas }: Props) {
 
       {porDia.map(([fecha, lista]) => (
         <section key={fecha} id={`dia-${fecha}`} aria-labelledby={`titulo-${fecha}`} className="mb-6 scroll-mt-40">
-          <h2 id={`titulo-${fecha}`} className="mb-2 font-titulos text-lg font-bold uppercase tracking-wide text-texto-suave">
+          <h2 id={`titulo-${fecha}`} className="mb-2 font-titulos text-lg font-bold uppercase tracking-wide text-secundario">
             {fecha === "sin-fecha" ? "Fecha a confirmar" : formatearDia(fecha)}
           </h2>
           <div className="flex flex-col gap-3">
