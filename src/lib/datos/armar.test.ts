@@ -24,11 +24,13 @@ describe("datos de ejemplo", () => {
     const leer = (hoja: Hoja) =>
       leerCsv(readFileSync(path.join(process.cwd(), "data/ejemplo", `${hoja.toLowerCase()}.csv`), "utf8")).filas;
     const datos = armarDatos(
-      { Equipos: leer("Equipos"), Partidos: leer("Partidos"), Eventos: leer("Eventos"), Jugadores: leer("Jugadores") },
+      { Equipos: leer("Equipos"), Partidos: leer("Partidos"), Eventos: leer("Eventos"), Jugadores: leer("Jugadores"), Formulario: leer("Formulario") },
       opciones,
     );
     expect(datos.avisos).toEqual([]);
     expect(datos.equipos).toHaveLength(16);
+    // Las respuestas del formulario de ejemplo crean un jugador nuevo y completan otro.
+    expect(datos.jugadores.find((j) => j.id === "2001-TOMASITURRALDE")).toMatchObject({ apodo: "Toto", equipoId: "2001" });
     expect(datos.equipos.find((e) => e.id === "2001")!.nombre).toBe("Clase 2001");
     expect(datos.equipos.find((e) => e.id === "8YPICO")).toMatchObject({ anio: null, nombre: "80 y pico", sigla: "80+" });
   });
@@ -238,4 +240,74 @@ describe("fechas y horas", () => {
     ["18hs", "18:00"],
     ["25:00", null],
   ])("parsearHora(%s)", (entrada, salida) => expect(parsearHora(entrada)).toBe(salida));
+});
+
+describe("formulario de jugadores", () => {
+  const equipos: FilaCruda[] = [
+    { id: "2001", anio: "2001", zona: "A" },
+    { id: "8YPICO", anio: "", zona: "A", nombre: "80 y pico", alias: "8ypico" },
+  ];
+  const AUTORIZA = "Acepto que mi foto y mis datos se publiquen";
+  const respuesta = (datos: Record<string, string>): FilaCruda => ({
+    "marca temporal": "10/11/2026 21:00:00",
+    nombre: "", apellido: "", "apodo_(opcional)": "", categoria: "", posicion: "",
+    "peso_(kg)": "", "altura_(cm)": "", foto_url: "", "autorizacion": AUTORIZA, ocultar: "",
+    ...datos,
+  });
+
+  it("crea el perfil y lo suma al equipo elegido, con la foto de Drive", () => {
+    const datos = armarDatos(
+      hojas({
+        Equipos: equipos,
+        Formulario: [
+          respuesta({
+            nombre: "juan cruz", apellido: "pérez", "apodo_(opcional)": "Coke", categoria: "Clase 2001", posicion: "Delantero",
+            "peso_(kg)": "82,5", "altura_(cm)": "181", foto_url: "https://drive.google.com/open?id=1AbCdEfGhIjKlMnOp",
+          }),
+        ],
+      }),
+      opciones,
+    );
+    expect(datos.avisos).toEqual([]);
+    expect(datos.jugadores[0]).toMatchObject({
+      id: "2001-JUANCRUZPEREZ", equipoId: "2001", nombre: "Juan Cruz Pérez", apodo: "Coke", posicion: "Delantero",
+      pesoKg: 82.5, alturaCm: 181, fotoDriveId: "1AbCdEfGhIjKlMnOp",
+    });
+    expect(datos.jugadores[0].fotoUrl).toContain("drive.google.com/thumbnail?id=1AbCdEfGhIjKlMnOp");
+  });
+
+  it("si respondió dos veces vale la última, y completa a un jugador que ya estaba", () => {
+    const datos = armarDatos(
+      hojas({
+        Equipos: equipos,
+        Jugadores: [{ id: "8YPICO-01", equipo: "8ypico", nombre: "Lautaro Basavilbaso", numero: "1" }],
+        Formulario: [
+          respuesta({ nombre: "Lautaro", apellido: "Basavilbaso", categoria: "80 y pico", "peso_(kg)": "99" }),
+          respuesta({ nombre: "Lautaro", apellido: "Basavilbaso", categoria: "80 y pico", "peso_(kg)": "96" }),
+        ],
+      }),
+      opciones,
+    );
+    expect(datos.jugadores).toHaveLength(1);
+    expect(datos.jugadores[0]).toMatchObject({ id: "8YPICO-01", numero: 1, pesoKg: 96 });
+  });
+
+  it("no publica a quien no autorizó ni a los ocultados, y avisa categorías inexistentes", () => {
+    const datos = armarDatos(
+      hojas({
+        Equipos: equipos,
+        Formulario: [
+          respuesta({ nombre: "A", apellido: "Uno", categoria: "Clase 2001", autorizacion: "" }),
+          respuesta({ nombre: "B", apellido: "Dos", categoria: "Clase 2001", ocultar: "x" }),
+          respuesta({ nombre: "C", apellido: "Tres", categoria: "Clase 1950" }),
+        ],
+      }),
+      opciones,
+    );
+    expect(datos.jugadores).toEqual([]);
+    expect(datos.avisos.map((a) => [a.hoja, a.fila, a.nivel])).toEqual([
+      ["Formulario", 2, "advertencia"],
+      ["Formulario", 4, "error"],
+    ]);
+  });
 });

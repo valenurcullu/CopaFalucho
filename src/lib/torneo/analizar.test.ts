@@ -20,7 +20,7 @@ const config: TorneoConfig = {
 
 const equipo = (id: string, zona: string) => ({ id, anio: Number(id), zona, nombre: `Clase ${id}`, sigla: id.slice(-2), fotoUrl: null, rankingAnterior: null, puntosDescontados: 0 });
 const jugador = (id: string, equipoId: string, nombre: string) => ({
-  id, equipoId, nombre, apodo: null, numero: null, posicion: null, fotoUrl: null, pesoKg: null, alturaCm: null, soloEnEventos: false,
+  id, equipoId, nombre, apodo: null, numero: null, posicion: null, fotoUrl: null, pesoKg: null, alturaCm: null, soloEnEventos: false, fotoDriveId: null,
 });
 
 function partido(id: string, datos: Partial<Partido>): Partido {

@@ -15,7 +15,8 @@
     "iconos:generar": "tsx scripts/marca/generar-iconos.ts",
     "jugadores:importar": "tsx scripts/importar/importar-jugadores.ts",
     "qr": "tsx scripts/qr/generar-qr.ts",
-    "equipos:fotos": "tsx scripts/importar/importar-fotos-equipos.ts"
+    "equipos:fotos": "tsx scripts/importar/importar-fotos-equipos.ts",
+    "fotos:arreglar": "tsx scripts/importar/arreglar-fotos.ts"
   },
   "dependencies": {
     "@serwist/turbopack": "^9.5.13",

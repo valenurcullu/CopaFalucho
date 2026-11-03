@@ -1,22 +1,27 @@
-import "server-only";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Hoja } from "@/domain/tipos";
 import type { HojasCrudas } from "./armar";
-import { leerCsv, normalizarColumna } from "./csv";
+import { leerCsv, normalizarColumna, type FilaCruda } from "./csv";
+import { esFormularioDeJugadores } from "./formulario";
 import { COLUMNAS } from "./esquemas";
 
-export const HOJAS: readonly Hoja[] = ["Equipos", "Partidos", "Eventos", "Jugadores"];
+type HojaObligatoria = Exclude<Hoja, "Formulario">;
+
+export const HOJAS: readonly HojaObligatoria[] = ["Equipos", "Partidos", "Eventos", "Jugadores"];
+
+/** Pestaña con las respuestas del Google Form de jugadores (opcional). */
+export const HOJA_FORMULARIO = "Formulario";
 
 /** Columnas mínimas para reconocer cada hoja (gviz devuelve la primera hoja si el nombre no existe). */
-const COLUMNAS_CLAVE: Record<Hoja, string[]> = {
+const COLUMNAS_CLAVE: Record<HojaObligatoria, string[]> = {
   Equipos: ["anio", "zona"],
   Partidos: ["fase", "local", "visitante", "estado"],
   Eventos: ["partido_id", "tipo", "equipo"],
   Jugadores: ["equipo", "nombre"],
 };
 
-function verificarColumnas(hoja: Hoja, columnas: string[]) {
+function verificarColumnas(hoja: HojaObligatoria, columnas: string[]) {
   const faltan = COLUMNAS_CLAVE[hoja].filter((c) => !columnas.includes(c));
   if (faltan.length > 0) {
     const esperadas = COLUMNAS[hoja].join(", ");
@@ -27,21 +32,31 @@ function verificarColumnas(hoja: Hoja, columnas: string[]) {
   }
 }
 
-async function leerHojas(leer: (hoja: Hoja) => Promise<string>): Promise<HojasCrudas> {
-  const contenidos = await Promise.all(HOJAS.map(leer));
+async function leerHojas(leer: (hoja: string) => Promise<string>): Promise<HojasCrudas> {
+  const [contenidos, formulario] = await Promise.all([
+    Promise.all(HOJAS.map(leer)),
+    // Opcional: si no está o no se puede leer, la app sigue sin el formulario.
+    leer(HOJA_FORMULARIO).catch(() => ""),
+  ]);
   const entradas = HOJAS.map((hoja, i) => {
     const { columnas, filas } = leerCsv(contenidos[i]);
     // Una hoja totalmente vacía (ni encabezado) cuenta como sin filas.
     if (columnas.length > 0) verificarColumnas(hoja, columnas);
     return [hoja, filas] as const;
   });
-  return Object.fromEntries(entradas) as HojasCrudas;
+  // Si la pestaña no existe, gviz devuelve la primera hoja: solo se usa si tiene las preguntas del formulario.
+  const respuestas = leerCsv(formulario);
+  return {
+    ...(Object.fromEntries(entradas) as Record<HojaObligatoria, FilaCruda[]>),
+    Formulario: esFormularioDeJugadores(respuestas.columnas) ? respuestas.filas : [],
+  };
 }
 
 /** Datos de ejemplo versionados en data/ejemplo (mismo formato que la planilla). */
 export function leerEjemplo(): Promise<HojasCrudas> {
   const carpeta = path.join(process.cwd(), "data", "ejemplo");
   return leerHojas((hoja) => readFile(path.join(carpeta, `${hoja.toLowerCase()}.csv`), "utf8"));
+
 }
 
 /**

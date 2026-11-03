@@ -16,7 +16,7 @@ import {
  * Columnas de cada hoja de la planilla, en el orden en que aparecen.
  * Es el contrato con el admin: la planilla de ejemplo se genera desde acá.
  */
-export const COLUMNAS: Record<Hoja, readonly string[]> = {
+export const COLUMNAS: Record<Exclude<Hoja, "Formulario">, readonly string[]> = {
   Equipos: ["id", "año", "zona", "nombre", "sigla", "alias", "foto_url", "ranking_anterior", "puntos_descontados"],
   Partidos: [
     "id",

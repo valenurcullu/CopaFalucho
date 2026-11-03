@@ -36,7 +36,7 @@ describe("validarImportacion", () => {
       ["2001-01", "2001-01.JPG"],
       ["2001-02", "2001-02.png"],
     ]);
-    expect(mensajes).toContainEqual(expect.stringMatching(/2009-01.jpg: No hay ningún jugador/));
+    expect(mensajes).toContainEqual(expect.stringMatching(/2009-01.jpg: No se encontró al jugador/));
     expect(mensajes).toContainEqual(expect.stringMatching(/notas.txt: Formato de imagen no soportado/));
     expect(mensajes).toContainEqual(expect.stringMatching(/más de una foto para 2001-01/));
     expect(mensajes.some((m) => m.includes(".DS_Store"))).toBe(false);
@@ -49,15 +49,38 @@ describe("validarImportacion", () => {
   });
 });
 
+describe("fotos nombradas por equipo y nombre", () => {
+  const csv = `id,equipo,nombre,apodo
+2001-01,2001,Juan Pérez,Coke
+2001-02,2001,Martín Monclús,
+2002-01,2002,Juan Gómez,
+`;
+  it("encuentra al jugador por apodo, nombre completo o apellido", () => {
+    const r = validarImportacion(csv, ["2001 - Coke.jpg", "01 Martin Monclus.png", "2002 gomez.jpg", "2001 Nadie.jpg"]);
+    expect([...r.fotos]).toEqual([
+      ["2001-01", "2001 - Coke.jpg"],
+      ["2001-02", "01 Martin Monclus.png"],
+      ["2002-01", "2002 gomez.jpg"],
+    ]);
+    expect(r.problemas.filter((p) => !p.donde.startsWith("fila")).map((p) => p.donde)).toEqual(["2001 Nadie.jpg"]);
+  });
+});
+
 describe("completarFotos", () => {
   const jugador = (id: string, fotoUrl: string | null) => ({
-    id, equipoId: "2001", nombre: id, apodo: null, numero: null, posicion: null, fotoUrl, pesoKg: null, alturaCm: null, soloEnEventos: false,
+    id, equipoId: "2001", nombre: id, apodo: null, numero: null, posicion: null, fotoUrl, pesoKg: null, alturaCm: null, soloEnEventos: false, fotoDriveId: null,
   });
 
   it("usa la foto importada si la planilla no trae foto_url", () => {
-    const [a, b, c] = completarFotos([jugador("A", null), jugador("B", "https://x/b.jpg"), jugador("C", null)], new Set(["A", "B"]));
+    const [a, b, c] = completarFotos([jugador("A", null), jugador("B", "https://x/b.jpg"), jugador("C", null)], { A: null, B: null });
     expect(a.fotoUrl).toBe("/jugadores/A.webp");
     expect(b.fotoUrl).toBe("https://x/b.jpg");
     expect(c.fotoUrl).toBeNull();
+  });
+
+  it("con foto del formulario, usa la optimizada solo si es de esa misma foto", () => {
+    const delForm = { ...jugador("A", "https://drive.google.com/thumbnail?id=nueva"), fotoDriveId: "nueva" };
+    expect(completarFotos([delForm], { A: "vieja" })[0].fotoUrl).toContain("drive.google.com");
+    expect(completarFotos([delForm], { A: "nueva" })[0].fotoUrl).toBe("/jugadores/A.webp");
   });
 });

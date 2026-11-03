@@ -11,8 +11,12 @@ import type {
 import type { FilaCruda } from "./csv";
 import { normalizarCodigo, sinAcentos } from "./campos";
 import { filaEquipo, filaEvento, filaJugador, filaPartido } from "./esquemas";
+import { leerRespuestas } from "./formulario";
 
-export type HojasCrudas = Record<Hoja, FilaCruda[]>;
+export type HojasCrudas = Record<Exclude<Hoja, "Formulario">, FilaCruda[]> & {
+  /** Respuestas del Google Form de jugadores (opcional). */
+  Formulario?: FilaCruda[];
+};
 
 interface Opciones {
   origen: DatosTorneo["origen"];
@@ -20,7 +24,7 @@ interface Opciones {
   ahora?: Date;
 }
 
-const ORDEN_HOJAS: Hoja[] = ["Equipos", "Jugadores", "Partidos", "Eventos"];
+const ORDEN_HOJAS: Hoja[] = ["Equipos", "Jugadores", "Formulario", "Partidos", "Eventos"];
 
 /** Fila 1 = encabezado, así que el índice 0 es la fila 2 de la planilla. */
 const filaPlanilla = (indice: number) => indice + 2;
@@ -94,7 +98,7 @@ function jugadorDesdeEvento(equipoId: string, texto: string, existentes: Map<str
   const nombre = texto.trim().replace(/\s+/g, " ").replace(/(^|\s)\S/g, (l) => l.toUpperCase());
   return {
     id, equipoId, nombre, apodo: null, numero: null, posicion: null,
-    fotoUrl: null, pesoKg: null, alturaCm: null, soloEnEventos: true,
+    fotoUrl: null, pesoKg: null, alturaCm: null, soloEnEventos: true, fotoDriveId: null,
   };
 }
 
@@ -107,7 +111,7 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
   const avisar = (nivel: AvisoDatos["nivel"], hoja: Hoja, indice: number, mensaje: string) =>
     avisos.push({ nivel, hoja, fila: filaPlanilla(indice), mensaje });
 
-  function validar<S extends z.ZodType>(hoja: Hoja, esquema: S): { fila: z.output<S>; indice: number }[] {
+  function validar<S extends z.ZodType>(hoja: Exclude<Hoja, "Formulario">, esquema: S): { fila: z.output<S>; indice: number }[] {
     const validas: { fila: z.output<S>; indice: number }[] = [];
     hojas[hoja].forEach((cruda, indice) => {
       const r = esquema.safeParse(cruda);
@@ -182,8 +186,45 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
       pesoKg: fila.peso_kg,
       alturaCm: fila.altura_cm,
       soloEnEventos: false,
+      fotoDriveId: null,
     });
     filasJugador.set(fila.id, indice);
+  }
+
+  // Formulario de jugadores: crea o completa perfiles y arma los planteles solo.
+  const { respuestas, problemas } = leerRespuestas(hojas.Formulario ?? []);
+  for (const p of problemas) avisar("advertencia", "Formulario", p.fila - 2, p.mensaje);
+  for (const r of respuestas) {
+    if (r.oculta) continue;
+    const indice = r.fila - 2;
+    if (!r.autoriza) {
+      avisar("advertencia", "Formulario", indice, `${r.nombre} ${r.apellido} no autorizó publicar sus datos: no se muestra`);
+      continue;
+    }
+    const equipoId = resolverEquipo(r.categoria);
+    if (!equipoId) {
+      avisar("error", "Formulario", indice, `La categoría "${r.categoria}" no existe en la hoja Equipos`);
+      continue;
+    }
+    const nombre = `${r.nombre} ${r.apellido}`;
+    const existente = [...jugadores.values()].find(
+      (j) => j.equipoId === equipoId && normalizarNombre(j.nombre) === normalizarNombre(nombre),
+    );
+    const id = existente?.id ?? `${equipoId}-${normalizarCodigo(`${r.nombre}${r.apellido}`)}`;
+    jugadores.set(id, {
+      id,
+      equipoId,
+      nombre,
+      apodo: r.apodo ?? existente?.apodo ?? null,
+      numero: existente?.numero ?? null,
+      posicion: r.posicion ?? existente?.posicion ?? null,
+      fotoUrl: r.fotoUrl ?? existente?.fotoUrl ?? null,
+      pesoKg: r.pesoKg ?? existente?.pesoKg ?? null,
+      alturaCm: r.alturaCm ?? existente?.alturaCm ?? null,
+      soloEnEventos: false,
+      fotoDriveId: r.fotoDriveId,
+    });
+    filasJugador.set(id, existente ? filasJugador.get(existente.id)! : indice);
   }
   controlarListas([...jugadores.values()], equipos, (indice, mensaje) => avisar("advertencia", "Jugadores", indice, mensaje), filasJugador);
   const buscarJugador = indicePorNombre([...jugadores.values()]);

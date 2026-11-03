@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { FotoJugador } from "@/components/jugadores/FotoJugador";
 import { Volver } from "@/components/layout/Volver";
 import { TarjetaPartido } from "@/components/partidos/TarjetaPartido";
 import { Esqueleto, EsqueletoLista, Tarjeta, TituloSeccion, Vacio } from "@/components/ui/basicos";
@@ -118,7 +119,13 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
               const stats = torneo.estadisticasJugadores[j.id];
               const contenido = (
                 <>
-                  <span className="w-8 shrink-0 text-center font-titulos text-xl font-bold text-enlace">{j.numero ?? "–"}</span>
+                  {j.numero !== null ? (
+                    <span className="w-8 shrink-0 text-center font-titulos text-xl font-bold text-enlace">{j.numero}</span>
+                  ) : (
+                    <span className="relative size-9 shrink-0 overflow-hidden rounded-full bg-figurita-fondo">
+                      <FotoJugador src={j.fotoUrl} nombre={j.nombre} tamanios="36px" />
+                    </span>
+                  )}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold">{nombreJugador(j)}</span>
                     {j.posicion && <span className="block text-xs text-texto-suave">{j.posicion}</span>}

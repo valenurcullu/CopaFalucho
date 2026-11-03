@@ -28,14 +28,13 @@ function Dato({ titulo, valor }: { titulo: string; valor: string }) {
  * grande, número y franja con el nombre.
  */
 export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAltura }: Props) {
-  const datos: [string, string][] = [
-    [equipo?.anio ? "Clase" : "Equipo", equipo ? String(equipo.anio ?? equipo.nombre) : "–"],
-    ["Posición", jugador.posicion ?? "–"],
-  ];
-  if (mostrarPesoAltura) {
-    datos.push(["Altura", jugador.alturaCm ? `${(jugador.alturaCm / 100).toFixed(2).replace(".", ",")} m` : "–"]);
-    datos.push(["Peso", jugador.pesoKg ? `${String(jugador.pesoKg).replace(".", ",")} kg` : "–"]);
-  }
+  // Solo los datos que están cargados: a los veteranos sin datos no les aparecen guiones.
+  const datos: [string, string][] = [];
+  if (equipo) datos.push([equipo.anio ? "Clase" : "Equipo", String(equipo.anio ?? equipo.nombre)]);
+  if (jugador.posicion) datos.push(["Posición", jugador.posicion]);
+  if (mostrarPesoAltura && jugador.alturaCm) datos.push(["Altura", `${(jugador.alturaCm / 100).toFixed(2).replace(".", ",")} m`]);
+  if (mostrarPesoAltura && jugador.pesoKg) datos.push(["Peso", `${String(jugador.pesoKg).replace(".", ",")} kg`]);
+  const columnas = ["grid-cols-1", "grid-cols-1", "grid-cols-2", "grid-cols-3", "grid-cols-4"][datos.length];
 
   return (
     <article
@@ -71,7 +70,7 @@ export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAl
           </div>
         </div>
 
-        <dl className={`grid gap-2 p-3 text-center ${datos.length === 4 ? "grid-cols-4" : "grid-cols-2"}`}>
+        <dl className={`grid gap-2 p-3 text-center ${columnas}`}>
           {datos.map(([t, v]) => (
             <Dato key={t} titulo={t} valor={v} />
           ))}

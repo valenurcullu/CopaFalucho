@@ -1,4 +1,5 @@
 import { leerCsv } from "../../src/lib/datos/csv";
+import { sinAcentos } from "../../src/lib/datos/campos";
 import { filaJugador } from "../../src/lib/datos/esquemas";
 
 export interface JugadorImportado {
@@ -28,6 +29,24 @@ export interface ResultadoValidacion {
 }
 
 export const EXTENSIONES_FOTO = [".jpg", ".jpeg", ".png", ".webp", ".avif", ".tif", ".tiff"];
+
+const normalizar = (s: string) => sinAcentos(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+/**
+ * Busca al jugador por un nombre de archivo tipo "2001 - Coke.jpg" o
+ * "2001 Juan Pérez.png": primero el equipo y después nombre, apellido o apodo.
+ */
+function buscarPorNombre(archivo: string, jugadores: readonly JugadorImportado[]): string | null {
+  const [equipo, ...resto] = normalizar(archivo.slice(0, archivo.lastIndexOf("."))).split(" ");
+  const nombre = resto.join(" ");
+  if (!equipo || !nombre) return null;
+  const candidatos = jugadores.filter((j) => {
+    if (normalizar(j.equipo) !== equipo && normalizar(j.equipo).slice(-2) !== equipo) return false;
+    const opciones = [j.nombre, j.apodo ?? "", j.nombre.split(/\s+/).at(-1) ?? ""].map(normalizar);
+    return opciones.includes(nombre);
+  });
+  return candidatos.length === 1 ? candidatos[0].id : null;
+}
 
 const extension = (archivo: string) => archivo.slice(archivo.lastIndexOf(".")).toLowerCase();
 const base = (archivo: string) => archivo.slice(0, archivo.lastIndexOf(".")).trim().toUpperCase();
@@ -86,9 +105,13 @@ export function validarImportacion(contenidoCsv: string, archivosFotos: readonly
       problemas.push({ nivel: "advertencia", donde: archivo, mensaje: "Formato de imagen no soportado (usá jpg, png o webp)" });
       continue;
     }
-    const id = base(archivo);
-    if (!ids.has(id)) {
-      problemas.push({ nivel: "advertencia", donde: archivo, mensaje: `No hay ningún jugador con id ${id}` });
+    const id = ids.has(base(archivo)) ? base(archivo) : buscarPorNombre(archivo, jugadores);
+    if (!id) {
+      problemas.push({
+        nivel: "advertencia",
+        donde: archivo,
+        mensaje: "No se encontró al jugador: nombrá la foto con su id (2001-07) o con equipo y nombre/apodo (\"2001 - Coke\")",
+      });
       continue;
     }
     if (fotos.has(id)) {

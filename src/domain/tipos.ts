@@ -89,9 +89,11 @@ export interface Jugador {
   alturaCm: number | null;
   /** true si no está en la hoja Jugadores y se creó a partir de un evento. */
   soloEnEventos: boolean;
+  /** Si la foto vino del formulario, el id del archivo en Drive (para optimizarla con npm run fotos:arreglar). */
+  fotoDriveId: string | null;
 }
 
-export type Hoja = "Equipos" | "Partidos" | "Eventos" | "Jugadores";
+export type Hoja = "Equipos" | "Partidos" | "Eventos" | "Jugadores" | "Formulario";
 
 /**
  * Problema en una fila de la planilla, para mostrarle al admin.

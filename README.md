@@ -146,9 +146,42 @@ El QR tiene corrección de errores alta: se sigue leyendo aunque el cartel se mo
 
 ## 5. Fotos y fichas de jugadores
 
+### Formulario de jugadores (recomendado)
+
+Cada jugador completa un Google Form desde el celular (nombre, apellido, apodo, categoría, posición, peso, altura y foto). La app arma su figurita y lo suma al plantel de su equipo sola.
+
+**Crearlo (una vez):**
+
+1. En la planilla del torneo: **Extensiones → Apps Script**. Borrá lo que haya y pegá el contenido de [scripts/google/formulario-jugadores.gs](scripts/google/formulario-jugadores.gs). Guardá.
+2. Elegí la función `crearFormulario` y tocá **Ejecutar**. Google pide permisos: "Revisar permisos" → tu cuenta → "Configuración avanzada" → "Ir a … (no seguro)" → Permitir. Es tu propio script.
+3. En **Registro de ejecución** aparecen el link para editar el formulario y el link para mandar a los jugadores.
+4. Abrí el formulario para editarlo y agregá la pregunta **Foto** (Google no deja crearla por código): tipo **Subir archivo**, solo imágenes, 1 archivo, máximo 10 MB, obligatoria. Movela abajo de "Altura (cm)".
+5. Las respuestas caen en la pestaña **Formulario** de la planilla. No le cambies el nombre.
+
+**Cómo funciona:**
+
+- Categoría y posición son listas cerradas. Si cambian los equipos, en la planilla: menú **Copa Falucho → Actualizar categorías del formulario**.
+- Si alguien responde dos veces, vale la última respuesta: así corrige datos o foto.
+- Si el jugador ya estaba en la hoja Jugadores (mismo nombre y equipo), el formulario completa sus datos.
+- Para sacar a alguien de la app, poné una **X** en la columna **Ocultar** de su fila.
+- Quien no tilda la autorización no se publica.
+- Cada foto que llega se hace pública (solo lectura) para que la app la muestre. Si alguna no aparece: **Copa Falucho → Hacer públicas las fotos ya subidas**.
+- Google pide iniciar sesión con una cuenta de Google para subir archivos.
+
+**Arreglar las fotos** (recortarlas centrando la cara y optimizarlas), cada tanto:
+
+```bash
+npm run fotos:arreglar      # solo las nuevas o cambiadas
+git add public/jugadores src/generated && git commit -m "Fotos de jugadores" && git push
+```
+
+Necesita `GOOGLE_SHEET_ID` en `.env.local`. Mientras no se corra, la app muestra la foto tal como se subió.
+
+### Importar un álbum (CSV + carpeta de fotos)
+
 ### Importar el álbum
 
-Necesitás un CSV con las columnas de la hoja Jugadores (`id, equipo, nombre, apodo, número, posición, peso_kg, altura_cm`; apodo, peso y altura son opcionales) y una carpeta con las fotos, cada una con el **id del jugador como nombre de archivo** (`2001-07.jpg`). Se aceptan jpg, png, webp, avif y tiff; mayúsculas o minúsculas da igual.
+Para cargar muchos jugadores de una vez (por ejemplo, el álbum del año pasado). Necesitás un CSV con las columnas de la hoja Jugadores (`id, equipo, nombre, apodo, número, posición, peso_kg, altura_cm`; apodo, peso y altura son opcionales) y una carpeta con las fotos, cada una nombrada con el **id del jugador** (`2001-07.jpg`) o con **equipo y nombre, apellido o apodo** (`2001 - Coke.jpg`, `2001 Juan Pérez.png`). Se aceptan jpg, png, webp, avif y tiff; mayúsculas o minúsculas da igual.
 
 ```bash
 # Solo revisar, sin escribir nada:

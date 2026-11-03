@@ -19,6 +19,7 @@ import { parseArgs } from "node:util";
 import sharp from "sharp";
 import { escribirCsv } from "../../src/lib/datos/csv";
 import { COLUMNAS } from "../../src/lib/datos/esquemas";
+import { guardarManifiesto, leerManifiesto } from "./manifiesto";
 import { validarImportacion, type Problema } from "./validar";
 
 const RAIZ = process.cwd();
@@ -93,16 +94,10 @@ async function main() {
   }
   if (hechas > 0) console.log(`✓ ${hechas} fotos optimizadas en public/jugadores (${Math.round(bytes / 1024)} KB en total)`);
 
-  // Manifiesto: suma las fotos nuevas a las que ya estaban importadas.
-  let previas: string[] = [];
-  try {
-    previas = JSON.parse(await readFile(MANIFIESTO, "utf8"));
-  } catch {
-    // Primera importación.
-  }
-  const conFoto = [...new Set([...previas, ...fotos.keys()])].sort();
-  await mkdir(path.dirname(MANIFIESTO), { recursive: true });
-  await writeFile(MANIFIESTO, JSON.stringify(conFoto, null, 2) + "\n");
+  // Manifiesto: suma las fotos nuevas a las que ya estaban (null = foto del álbum, no de Drive).
+  const manifiesto = await leerManifiesto(MANIFIESTO);
+  for (const id of fotos.keys()) manifiesto[id] = null;
+  await guardarManifiesto(MANIFIESTO, manifiesto);
 
   const filas = jugadores.map((j) => [
     j.id, j.equipo, j.nombre, j.apodo, j.numero, j.posicion,
