@@ -2,11 +2,10 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { ManifiestoFotos } from "../../src/lib/datos/fotos";
 
-/** Lee src/generated/fotos-jugadores.json (acepta el formato viejo, una lista de ids). */
+/** Lee src/generated/fotos-jugadores.json. */
 export async function leerManifiesto(archivo: string): Promise<ManifiestoFotos> {
   try {
-    const contenido = JSON.parse(await readFile(archivo, "utf8"));
-    return Array.isArray(contenido) ? Object.fromEntries(contenido.map((id: string) => [id, null])) : contenido;
+    return JSON.parse(await readFile(archivo, "utf8"));
   } catch {
     return {};
   }

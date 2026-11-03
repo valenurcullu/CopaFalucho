@@ -12,7 +12,8 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import sharp from "sharp";
 import { normalizarCodigo } from "../../src/lib/datos/campos";
-import { EXTENSIONES_FOTO } from "./validar";
+
+const EXTENSIONES_FOTO = [".jpg", ".jpeg", ".png", ".webp", ".avif", ".tif", ".tiff"];
 
 const RAIZ = process.cwd();
 const DESTINO = path.join(RAIZ, "public", "equipos");

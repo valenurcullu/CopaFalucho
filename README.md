@@ -148,7 +148,7 @@ El QR tiene corrección de errores alta: se sigue leyendo aunque el cartel se mo
 
 ### Formulario de jugadores (recomendado)
 
-Cada jugador completa un Google Form desde el celular (nombre, apellido, apodo, categoría, posición, peso, altura y foto). La app arma su figurita y lo suma al plantel de su equipo sola.
+Todos los jugadores se cargan con el formulario. A los que no lo completen (por ejemplo, los veteranos), cargalos a mano en la hoja **Jugadores** o completá el formulario por ellos. Cada jugador completa un Google Form desde el celular (nombre, apellido, apodo, categoría, posición, peso, altura y foto). La app arma su figurita y lo suma al plantel de su equipo sola.
 
 **Crearlo (una vez):**
 
@@ -176,31 +176,6 @@ git add public/jugadores src/generated && git commit -m "Fotos de jugadores" && 
 ```
 
 Necesita `GOOGLE_SHEET_ID` en `.env.local`. Mientras no se corra, la app muestra la foto tal como se subió.
-
-### Importar un álbum (CSV + carpeta de fotos)
-
-### Importar el álbum
-
-Para cargar muchos jugadores de una vez (por ejemplo, el álbum del año pasado). Necesitás un CSV con las columnas de la hoja Jugadores (`id, equipo, nombre, apodo, número, posición, peso_kg, altura_cm`; apodo, peso y altura son opcionales) y una carpeta con las fotos, cada una nombrada con el **id del jugador** (`2001-07.jpg`) o con **equipo y nombre, apellido o apodo** (`2001 - Coke.jpg`, `2001 Juan Pérez.png`). Se aceptan jpg, png, webp, avif y tiff; mayúsculas o minúsculas da igual.
-
-```bash
-# Solo revisar, sin escribir nada:
-npm run jugadores:importar -- --csv album.csv --fotos ./fotos --validar
-
-# Importar:
-npm run jugadores:importar -- --csv album.csv --fotos ./fotos
-```
-
-El importador:
-
-- valida el CSV (columnas, ids repetidos, nombres vacíos, pesos y alturas imposibles, números repetidos en una clase) y avisa fila por fila;
-- endereza cada foto, la recorta a 4:5 centrándose en lo importante (la cara) y la guarda en WebP (600×750, unas decenas de KB) en `public/jugadores/`;
-- escribe `data/jugadores-importados.csv`, listo para pegar en la hoja Jugadores;
-- registra las fotos en `src/generated/fotos-jugadores.json`, así la app las usa aunque la planilla no tenga `foto_url`.
-
-Después: `git add public/jugadores src/generated && git commit -m "Fotos de jugadores" && git push`.
-
-Si un jugador no tiene foto, la figurita muestra una silueta.
 
 ### Mostrar u ocultar fichas
 
@@ -257,7 +232,8 @@ npm run dev                  # http://localhost:3000
 | `npm run ejemplo:generar` | Regenera los datos de ejemplo de `data/ejemplo/` |
 | `npm run planilla:generar` | Regenera `data/planilla-ejemplo.xlsx` desde los datos de ejemplo |
 | `npm run iconos:generar` | Regenera los íconos de la app desde el logo |
-| `npm run jugadores:importar` | Importador de jugadores y fotos (sección 5) |
+| `npm run fotos:arreglar` | Optimiza las fotos que subieron los jugadores por el formulario (sección 5) |
+| `npm run equipos:fotos -- --fotos <carpeta>` | Fotos de perfil de los equipos (sección 5) |
 | `npm run qr -- <url>` | QR y cartel (sección 4) |
 
 ### Estructura

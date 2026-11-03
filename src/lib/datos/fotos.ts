@@ -3,29 +3,23 @@ import fotosJugadores from "@/generated/fotos-jugadores.json";
 import type { Equipo, Jugador } from "@/domain/tipos";
 
 /**
- * Fotos de jugadores optimizadas en public/jugadores: id del jugador → id del
- * archivo de Drive del que salió (null si vino del importador de álbum).
+ * Fotos de jugadores optimizadas con `npm run fotos:arreglar` (en public/jugadores):
+ * id del jugador → id del archivo de Drive del que salió.
  */
-export type ManifiestoFotos = Record<string, string | null>;
+export type ManifiestoFotos = Record<string, string>;
 
-const manifiestoJugadores: ManifiestoFotos = Array.isArray(fotosJugadores)
-  ? Object.fromEntries((fotosJugadores as string[]).map((id) => [id, null]))
-  : (fotosJugadores as ManifiestoFotos);
+const manifiestoJugadores = fotosJugadores as ManifiestoFotos;
 const equiposConFoto = new Set<string>(fotosEquipos);
 
 /**
- * Usa la foto optimizada (public/jugadores) cuando corresponde:
- * - si la foto del jugador viene del formulario, solo si se optimizó esa misma
- *   foto (si mandó una nueva, se muestra la nueva hasta correr fotos:arreglar);
- * - si no tiene foto, la importada del álbum.
+ * Usa la foto optimizada (public/jugadores) si es de la misma foto que el
+ * jugador subió por el formulario. Si mandó una nueva, se muestra la nueva
+ * hasta que se vuelva a correr `npm run fotos:arreglar`.
  */
 export function completarFotos(jugadores: Jugador[], manifiesto: ManifiestoFotos = manifiestoJugadores): Jugador[] {
-  return jugadores.map((j) => {
-    if (!(j.id in manifiesto)) return j;
-    const local = { ...j, fotoUrl: `/jugadores/${j.id}.webp` };
-    if (j.fotoDriveId) return manifiesto[j.id] === j.fotoDriveId ? local : j;
-    return j.fotoUrl ? j : local;
-  });
+  return jugadores.map((j) =>
+    j.fotoDriveId && manifiesto[j.id] === j.fotoDriveId ? { ...j, fotoUrl: `/jugadores/${j.id}.webp` } : j,
+  );
 }
 
 /** Igual que `completarFotos`, para las fotos de perfil de los equipos (`npm run equipos:fotos`). */

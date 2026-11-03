@@ -56,7 +56,7 @@ async function main() {
         .resize({ width: 600, height: 750, fit: "cover", position: sharp.strategy.attention })
         .webp({ quality: 78, effort: 5 })
         .toFile(path.join(DESTINO, `${j.id}.webp`));
-      manifiesto[j.id] = j.fotoDriveId;
+      manifiesto[j.id] = j.fotoDriveId!;
       hechas++;
       bytes += info.size;
       console.log(`✓ ${j.nombre} (${j.id})`);

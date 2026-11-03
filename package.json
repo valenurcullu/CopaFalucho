@@ -13,7 +13,6 @@
     "ejemplo:generar": "tsx scripts/ejemplo/generar.ts",
     "planilla:generar": "tsx scripts/planilla/generar-planilla.ts",
     "iconos:generar": "tsx scripts/marca/generar-iconos.ts",
-    "jugadores:importar": "tsx scripts/importar/importar-jugadores.ts",
     "qr": "tsx scripts/qr/generar-qr.ts",
     "equipos:fotos": "tsx scripts/importar/importar-fotos-equipos.ts",
     "fotos:arreglar": "tsx scripts/importar/arreglar-fotos.ts"

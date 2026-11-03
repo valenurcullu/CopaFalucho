@@ -24,7 +24,7 @@ function Dato({ titulo, valor }: { titulo: string; valor: string }) {
 }
 
 /**
- * Ficha del jugador con estética de figurita de álbum: marco dorado, foto
+ * Ficha del jugador con estética de figurita de álbum: marco rojo, foto
  * grande, número y franja con el nombre.
  */
 export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAltura }: Props) {
