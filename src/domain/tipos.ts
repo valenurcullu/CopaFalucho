@@ -5,7 +5,11 @@
 
 export type Fase = "zona" | "octavos" | "cuartos" | "semis" | "tercer_puesto" | "final";
 
-export type EstadoPartido = "programado" | "en_juego" | "finalizado";
+/**
+ * No hay estado "en juego": los resultados se cargan después. Que un partido
+ * "se está jugando" se deduce de la hora (ver lib/horario.ts).
+ */
+export type EstadoPartido = "programado" | "finalizado";
 
 export type TipoEvento = "gol" | "gol_en_contra" | "amarilla" | "roja";
 
@@ -19,7 +23,12 @@ export interface Equipo {
   nombre: string;
   /** Texto corto para el distintivo: "’01", "80+", "RDM". */
   sigla: string;
-  escudoUrl: string | null;
+  /** Foto de perfil del equipo (de la planilla o importada con npm run equipos:fotos). */
+  fotoUrl: string | null;
+  /** Puesto en el ranking del año anterior, para el último desempate. */
+  rankingAnterior: number | null;
+  /** Puntos descontados por sanción (por ejemplo, no mandar árbitro: 3). */
+  puntosDescontados: number;
 }
 
 export interface Partido {

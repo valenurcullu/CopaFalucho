@@ -8,14 +8,17 @@ const config: TorneoConfig = {
   edicion: 2026,
   puntos: { victoria: 3, empate: 1, derrota: 0 },
   desempate: ["diferencia_gol", "goles_a_favor", "fair_play"],
+  desempateGeneral: ["diferencia_gol", "goles_a_favor"],
   fairPlay: { amarilla: 1, roja: 3 },
   formato: { clasificadosPorZona: 2, cruces: "zonas", tercerPuesto: false, llaves: "auto" },
-  duracionMinutos: 50,
+  duracionMinutos: 40,
+  descansoMinutos: 5,
+  sanciones: { amarillasParaSuspension: 3, limpiarAmarillasEn: "semis" },
   jugadores: { mostrarFichas: true, mostrarPesoAltura: true },
-  revalidarSegundos: 30,
+  revalidarSegundos: 300,
 };
 
-const equipo = (id: string, zona: string) => ({ id, anio: Number(id), zona, nombre: `Clase ${id}`, sigla: id.slice(-2), escudoUrl: null });
+const equipo = (id: string, zona: string) => ({ id, anio: Number(id), zona, nombre: `Clase ${id}`, sigla: id.slice(-2), fotoUrl: null, rankingAnterior: null, puntosDescontados: 0 });
 const jugador = (id: string, equipoId: string, nombre: string) => ({
   id, equipoId, nombre, apodo: null, numero: null, posicion: null, fotoUrl: null, pesoKg: null, alturaCm: null, soloEnEventos: false,
 });
@@ -79,7 +82,7 @@ describe("analizarTorneo", () => {
 
   it("no define cruces mientras la zona no terminó", () => {
     const datos = torneoChico();
-    datos.partidos[0] = { ...datos.partidos[0], estado: "en_juego" };
+    datos.partidos[0] = { ...datos.partidos[0], estado: "programado" };
     const t = analizarTorneo(datos, config);
     const s1 = t.partidos.find((p) => p.id === "S1")!;
     expect(t.zonas.find((z) => z.zona === "A")!.completa).toBe(false);
@@ -88,12 +91,20 @@ describe("analizarTorneo", () => {
     expect(s1.visitanteId).toBe("2004");
   });
 
-  it("un partido en juego muestra marcador pero no suma en la tabla", () => {
+  it("un partido programado no muestra marcador ni suma en la tabla", () => {
     const datos = torneoChico();
-    datos.partidos[0] = { ...datos.partidos[0], estado: "en_juego" };
+    datos.partidos[0] = { ...datos.partidos[0], estado: "programado" };
     const t = analizarTorneo(datos, config);
-    expect(t.partidos.find((p) => p.id === "Z1")!.marcador).toEqual({ local: 2, visitante: 0 });
+    expect(t.partidos.find((p) => p.id === "Z1")!.marcador).toBeNull();
     expect(t.zonas.find((z) => z.zona === "A")!.tabla[0].pj).toBe(0);
+  });
+
+  it("descuenta los puntos de sanción en la tabla", () => {
+    const datos = torneoChico();
+    datos.equipos[0] = { ...datos.equipos[0], puntosDescontados: 3 };
+    const t = analizarTorneo(datos, config);
+    // 2001 le ganó a 2002, pero con el descuento queda con 0 y empata en puntos: decide la diferencia de gol.
+    expect(t.zonas.find((z) => z.zona === "A")!.tabla[0]).toMatchObject({ equipoId: "2001", pts: 0, puntosDescontados: 3 });
   });
 
   it("calcula la racha con los últimos resultados, en orden", () => {

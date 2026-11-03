@@ -5,18 +5,19 @@ const TAMANIOS = { sm: "size-7 text-[11px]", md: "size-10 text-sm", lg: "size-16
 const PIXELES = { sm: 28, md: 40, lg: 64 } as const;
 
 /**
- * Escudo de una clase. Si en la planilla hay escudo_url se usa la imagen;
+ * Foto de perfil del equipo. Si en la planilla hay foto_url (o se importó con
+ * npm run equipos:fotos) se usa la imagen;
  * si no, un distintivo con la sigla ("’01", "80+", "RDM").
  */
 export function EscudoClase({ equipo, tamanio = "md" }: { equipo: Equipo | null | undefined; tamanio?: keyof typeof TAMANIOS }) {
-  if (equipo?.escudoUrl) {
+  if (equipo?.fotoUrl) {
     return (
       <Image
-        src={equipo.escudoUrl}
+        src={equipo.fotoUrl}
         alt=""
         width={PIXELES[tamanio]}
         height={PIXELES[tamanio]}
-        unoptimized={equipo.escudoUrl.startsWith("http")}
+        unoptimized={equipo.fotoUrl.startsWith("http")}
         className={`${TAMANIOS[tamanio]} shrink-0 rounded-full object-cover`}
       />
     );

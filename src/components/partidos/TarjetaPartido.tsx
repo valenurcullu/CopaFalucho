@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EnVivo, Insignia } from "@/components/ui/basicos";
+import { Insignia, Jugandose } from "@/components/ui/basicos";
 import { EscudoClase } from "@/components/ui/EscudoClase";
 import { IconoPelota, Tarjeta } from "@/components/ui/iconos";
 import type { Equipo } from "@/domain/tipos";
@@ -11,6 +11,8 @@ interface Props {
   conFichas: boolean;
   /** Muestra la fecha del partido en la cabecera (para listas sin agrupar por día). */
   mostrarFecha?: string;
+  /** Según la hora, el partido está en la cancha ahora. */
+  jugandose?: boolean;
 }
 
 function etiquetaFase(p: PartidoTarjeta) {
@@ -67,8 +69,7 @@ function LineaEvento({ evento, conFichas }: { evento: EventoVista; conFichas: bo
   );
 }
 
-export function TarjetaPartido({ partido: p, conFichas, mostrarFecha }: Props) {
-  const enJuego = p.estado === "en_juego";
+export function TarjetaPartido({ partido: p, conFichas, mostrarFecha, jugandose = false }: Props) {
   const finalizado = p.estado === "finalizado";
   const eventosLocal = p.eventos.filter((e) => e.lado === "local");
   const eventosVisitante = p.eventos.filter((e) => e.lado === "visitante");
@@ -76,14 +77,14 @@ export function TarjetaPartido({ partido: p, conFichas, mostrarFecha }: Props) {
   return (
     <article
       aria-label={`${p.local?.nombre ?? p.etiquetaLocal ?? "A definir"} contra ${p.visitante?.nombre ?? p.etiquetaVisitante ?? "A definir"}`}
-      className={`rounded-2xl bg-superficie p-4 ring-1 ${enJuego ? "ring-2 ring-vivo" : "ring-borde"}`}
+      className={`rounded-2xl bg-superficie p-4 ring-1 ${jugandose && !finalizado ? "ring-2 ring-marca" : "ring-borde"}`}
     >
       <div className="mb-2 flex items-center justify-between gap-2 text-xs">
         <span className="font-semibold uppercase tracking-wide text-texto-suave">
           {mostrarFecha && <>{mostrarFecha} · </>}
           {etiquetaFase(p)}
         </span>
-        {enJuego ? <EnVivo /> : finalizado ? <Insignia>Final</Insignia> : <Insignia className="bg-marca/10 text-marca">{p.hora ?? "A conf."}</Insignia>}
+        {finalizado ? <Insignia>Final</Insignia> : jugandose ? <Jugandose /> : <Insignia className="bg-marca/10 text-marca">{p.hora ?? "A conf."}</Insignia>}
       </div>
 
       <div className="flex flex-col gap-1">

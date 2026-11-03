@@ -24,7 +24,11 @@ Desde el celular, con la app **Hojas de cálculo de Google**. La app pública to
 
 ### Un partido, paso a paso
 
-1. En la hoja **Partidos**, en la fila del partido, escribí el resultado en `goles_local` y `goles_visitante` y cambiá `estado` a **finalizado** (o **en juego** si lo querés mostrar en vivo). Con eso ya se actualizan las tablas y las llaves.
+1. En la hoja **Partidos**, en la fila del partido, escribí el resultado en `goles_local` y `goles_visitante` y cambiá `estado` a **finalizado**. Con eso ya se actualizan las tablas y las llaves.
+
+   No hace falta marcar nada mientras se juega: como los partidos empiezan puntuales, la app muestra arriba del fixture los que se están jugando según la hora (40 minutos + 5 de descanso) y, si no hay ninguno, el próximo turno.
+
+   Si un equipo pierde por no presentarse o por incluir a un jugador no habilitado, cargá `3` y `0` como resultado.
 2. **Opcional, pero recomendado:** en la hoja **Eventos**, una fila por cada gol y cada tarjeta, para goleadores, tarjetas y el detalle del partido:
 
    | partido_id | tipo | equipo | jugador | minuto |
@@ -72,7 +76,10 @@ Reglas que conviene respetar:
    - `formato.clasificadosPorZona`: cuántos pasan de cada zona.
    - `formato.cruces`: `"general"` (como en 2024: los clasificados se ordenan en una tabla general y se cruza 1º-8º, 2º-7º, 3º-6º, 4º-5º) o `"zonas"` (1A-2B, 1B-2A…).
    - `formato.tercerPuesto`: `true` si se juega el partido por el tercer puesto (agregá la fila con llave `T`).
-   - `desempate`: el orden de criterios. Opciones: `diferencia_gol`, `goles_a_favor`, `fair_play`, `enfrentamiento_directo`.
+   - `desempate`: el orden de criterios dentro de la zona. Opciones: `enfrentamiento_directo`, `diferencia_gol`, `goles_a_favor`, `goles_en_contra`, `fair_play`, `ranking_anterior`. Hoy sigue el reglamento: partido entre los empatados, diferencia de gol, goles a favor, menos goles en contra, ranking del año anterior (columna `ranking_anterior` de Equipos). Si sigue el empate, el reglamento pide un partido definitorio: la app lo marca con "=" en la tabla.
+   - `desempateGeneral`: el orden para la tabla general de clasificados que arma los cruces.
+   - `sanciones`: cuántas amarillas dan una fecha y en qué fase se limpian.
+   - `duracionMinutos` y `descansoMinutos`: definen qué partidos "se están jugando" según la hora.
    - `puntos` y `fairPlay` (puntos por amarilla y por roja).
 3. **Los cruces se arman solos** según las zonas que haya en la hoja Equipos y los clasificados por zona. Con `cruces: "general"` se usa la tabla general (en la pantalla Tablas aparece abajo de todo). Con `cruces: "zonas"`, el cuadro queda así; en los dos casos la cantidad total de clasificados tiene que ser 2, 4, 8 o 16:
 
@@ -170,6 +177,23 @@ En [src/config/torneo.ts](src/config/torneo.ts):
 - `jugadores.mostrarPesoAltura: false` saca peso y altura de la figurita.
 
 ---
+
+### Fotos de perfil de los equipos
+
+Cada archivo se llama como el equipo en la planilla (`2001.jpg`, `8ypico.png`, `RDM.jpg`):
+
+```bash
+npm run equipos:fotos -- --fotos ./fotos-equipos
+```
+
+Se recortan cuadradas, se optimizan y se guardan en `public/equipos/`. Después: commit de `public/equipos` y `src/generated`, y push. También se puede poner un link directo en la columna `foto_url` de la hoja Equipos.
+
+### Reglas que la app aplica sola
+
+- **Sanciones** (pestaña Stats → Sanciones y página de cada equipo): 3 amarillas o una doble amarilla (dos amarillas, o amarilla y roja, en el mismo partido) = 1 fecha; las amarillas se limpian en semis. La roja directa figura como suspensión para el próximo partido y la comisión define cuántas fechas.
+- **Descuento de puntos**: en la hoja Equipos, `puntos_descontados` (por ejemplo `3` al equipo que no mandó árbitro). Se resta en la tabla y se muestra al lado del equipo.
+- **Listas**: avisa en `/admin/chequeo` si un jugador aparece en dos equipos o si un combinado tiene más de 20 jugadores.
+- El texto del reglamento que se ve en la app está en [src/config/reglamento.ts](src/config/reglamento.ts).
 
 ## 6. Cambiar colores, logo o nombre
 

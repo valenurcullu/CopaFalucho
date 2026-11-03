@@ -69,6 +69,9 @@ export function TablaZona({ zona, equipos, rachas, clasificados }: Props) {
                       <span className="flex items-center gap-1.5">
                         <Racha resultados={rachas[f.equipoId] ?? []} />
                         {zona.completa && clasifica && <span className="text-[10px] font-bold uppercase tracking-wide text-marca">Clasificado</span>}
+                        {f.puntosDescontados > 0 && (
+                          <span className="text-[10px] font-bold uppercase tracking-wide text-secundario">−{f.puntosDescontados} pts sanción</span>
+                        )}
                       </span>
                     </span>
                   </Link>

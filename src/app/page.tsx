@@ -17,6 +17,7 @@ async function FixtureConDatos() {
         equipos={torneo.equipos}
         zonas={torneo.zonas.map((z) => z.zona)}
         conFichas={torneoConfig.jugadores.mostrarFichas}
+        duracion={{ duracionMinutos: torneoConfig.duracionMinutos, descansoMinutos: torneoConfig.descansoMinutos }}
       />
     </>
   );

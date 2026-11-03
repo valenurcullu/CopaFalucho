@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { TablaGeneral } from "@/components/tablas/TablaGeneral";
 import { TablaZona } from "@/components/tablas/TablaZona";
@@ -13,7 +14,9 @@ const NOMBRE_CRITERIO = {
   diferencia_gol: "diferencia de gol",
   goles_a_favor: "goles a favor",
   fair_play: "fair play",
-  enfrentamiento_directo: "enfrentamiento directo",
+  enfrentamiento_directo: "partido entre los empatados",
+  goles_en_contra: "menos goles en contra",
+  ranking_anterior: "ranking del año anterior",
 } as const;
 
 async function Tablas() {
@@ -37,11 +40,15 @@ async function Tablas() {
           {clasificadosPorZona === 1 ? "El primero clasifica" : `Los ${clasificadosPorZona} primeros clasifican`} a la fase final.
         </p>
         <p>
-          Victoria {torneoConfig.puntos.victoria} pts, empate {torneoConfig.puntos.empate}. Desempate:{" "}
-          {torneoConfig.desempate.map((c) => NOMBRE_CRITERIO[c]).join(", ")}. Fair play: amarilla {torneoConfig.fairPlay.amarilla}, roja{" "}
-          {torneoConfig.fairPlay.roja} (menos es mejor).
+          Victoria {torneoConfig.puntos.victoria} pts, empate {torneoConfig.puntos.empate}. Desempate en la zona:{" "}
+          {torneoConfig.desempate.map((c) => NOMBRE_CRITERIO[c]).join(", ")}.
         </p>
         <p>Solo suman los partidos finalizados. La racha muestra los últimos 3 resultados.</p>
+        <p>
+          <Link href="/reglamento" className="font-semibold text-enlace underline underline-offset-2">
+            Ver el reglamento completo
+          </Link>
+        </p>
       </div>
     </>
   );

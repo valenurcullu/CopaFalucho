@@ -42,10 +42,13 @@ async function ListaEquipos() {
 export default function PaginaEquipos() {
   return (
     <>
-      <TituloPagina bajada="Tocá una clase para ver su fixture y su plantel.">Equipos</TituloPagina>
+      <TituloPagina bajada="Tocá un equipo para ver su fixture y su plantel.">Equipos</TituloPagina>
       <Suspense fallback={<EsqueletoLista />}>
         <ListaEquipos />
       </Suspense>
+      <Link href="/reglamento" className="mt-4 flex min-h-12 items-center justify-center rounded-2xl font-semibold text-enlace ring-1 ring-borde">
+        Reglamento de la copa
+      </Link>
     </>
   );
 }

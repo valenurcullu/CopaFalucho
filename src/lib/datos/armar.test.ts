@@ -71,7 +71,7 @@ describe("armarDatos", () => {
     expect(datos.avisos).toEqual([]);
     expect(datos.partidos[0]).toMatchObject({
       id: "Z1",
-      estado: "en_juego",
+      estado: "programado",
       zona: "A",
       fecha: "2026-12-05",
       hora: "09:30",

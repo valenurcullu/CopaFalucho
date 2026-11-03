@@ -24,16 +24,45 @@ export interface FilaTabla {
   rojas: number;
   /** Puntos de fair play: menos es mejor. */
   fairPlay: number;
+  /** Ya restados de `pts`. */
+  puntosDescontados: number;
   /** Quedó igualado con otro equipo en todos los criterios configurados. */
   empateSinResolver: boolean;
 }
 
 type Reglas = Pick<TorneoConfig, "puntos" | "desempate" | "fairPlay">;
 
+/** Datos de cada equipo que no salen de los partidos. */
+export interface ExtrasTabla {
+  /** Puntos descontados por sanción. */
+  descuentos?: ReadonlyMap<string, number>;
+  /** Puesto en el ranking del año anterior. */
+  rankingAnterior?: ReadonlyMap<string, number>;
+}
+
+/** Ranking anterior como valor "más es mejor"; sin ranking va último. */
+const valorRanking = (extras: ExtrasTabla, equipoId: string) => -(extras.rankingAnterior?.get(equipoId) ?? 9999);
+
+/** Valor de un criterio que no depende de los rivales: más es mejor. */
+function valorCriterio(criterio: Exclude<CriterioDesempate, "enfrentamiento_directo">, f: FilaTabla, extras: ExtrasTabla): number {
+  switch (criterio) {
+    case "diferencia_gol":
+      return f.dg;
+    case "goles_a_favor":
+      return f.gf;
+    case "goles_en_contra":
+      return -f.gc;
+    case "fair_play":
+      return -f.fairPlay;
+    case "ranking_anterior":
+      return valorRanking(extras, f.equipoId);
+  }
+}
+
 function filaVacia(equipoId: string): FilaTabla {
   return {
     equipoId, posicion: 0, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, dg: 0, pts: 0,
-    amarillas: 0, rojas: 0, fairPlay: 0, empateSinResolver: false,
+    amarillas: 0, rojas: 0, fairPlay: 0, puntosDescontados: 0, empateSinResolver: false,
   };
 }
 
@@ -86,8 +115,13 @@ export function calcularTabla(
   partidos: readonly PartidoTabla[],
   tarjetas: readonly Pick<Evento, "equipoId" | "tipo">[],
   reglas: Reglas,
+  extras: ExtrasTabla = {},
 ): FilaTabla[] {
   const filas = acumular(equipoIds, partidos, reglas);
+  for (const f of filas.values()) {
+    f.puntosDescontados = extras.descuentos?.get(f.equipoId) ?? 0;
+    f.pts -= f.puntosDescontados;
+  }
   for (const t of tarjetas) {
     const fila = filas.get(t.equipoId);
     if (!fila) continue;
@@ -100,22 +134,15 @@ export function calcularTabla(
 
   /** Valor de un criterio para cada equipo de un grupo empatado: más es mejor. */
   const valor = (criterio: CriterioDesempate, grupo: FilaTabla[]): Map<string, number> => {
-    switch (criterio) {
-      case "diferencia_gol":
-        return new Map(grupo.map((f) => [f.equipoId, f.dg]));
-      case "goles_a_favor":
-        return new Map(grupo.map((f) => [f.equipoId, f.gf]));
-      case "fair_play":
-        return new Map(grupo.map((f) => [f.equipoId, -f.fairPlay]));
-      case "enfrentamiento_directo": {
-        const ids = grupo.map((f) => f.equipoId);
-        const entreEllos = partidos.filter((p) => ids.includes(p.localId) && ids.includes(p.visitanteId));
-        const mini = acumular(ids, entreEllos, reglas);
-        // Puntos en los partidos entre ellos. Si siguen iguales (por ejemplo un
-        // triple empate en círculo), decide el criterio siguiente.
-        return new Map(ids.map((id) => [id, mini.get(id)!.pts]));
-      }
+    if (criterio !== "enfrentamiento_directo") {
+      return new Map(grupo.map((f) => [f.equipoId, valorCriterio(criterio, f, extras)]));
     }
+    const ids = grupo.map((f) => f.equipoId);
+    const entreEllos = partidos.filter((p) => ids.includes(p.localId) && ids.includes(p.visitanteId));
+    const mini = acumular(ids, entreEllos, reglas);
+    // Puntos en los partidos entre ellos. Si siguen iguales (por ejemplo un
+    // triple empate en círculo), decide el criterio siguiente.
+    return new Map(ids.map((id) => [id, mini.get(id)!.pts]));
   };
 
   const desempatar = (grupo: FilaTabla[], criterios: CriterioDesempate[]): FilaTabla[][] => {
@@ -151,16 +178,19 @@ export interface FilaGeneral extends FilaTabla {
 export function tablaGeneral(
   zonas: readonly { zona: string; tabla: readonly FilaTabla[] }[],
   clasificadosPorZona: number,
-  reglas: Reglas,
+  criteriosConfigurados: readonly CriterioDesempate[],
+  extras: ExtrasTabla = {},
 ): FilaGeneral[] {
   const filas = zonas.flatMap((z) =>
     z.tabla.slice(0, clasificadosPorZona).map((f) => ({ ...f, zona: z.zona, puestoZona: f.posicion })),
   );
-  const criterios = reglas.desempate.filter((c) => c !== "enfrentamiento_directo");
-  const valor = (c: CriterioDesempate, f: FilaTabla) => (c === "diferencia_gol" ? f.dg : c === "goles_a_favor" ? f.gf : -f.fairPlay);
+  const criterios = criteriosConfigurados.filter((c): c is Exclude<CriterioDesempate, "enfrentamiento_directo"> => c !== "enfrentamiento_directo");
   const comparar = (a: FilaGeneral, b: FilaGeneral) => {
     if (b.pts !== a.pts) return b.pts - a.pts;
-    for (const c of criterios) if (valor(c, b) !== valor(c, a)) return valor(c, b) - valor(c, a);
+    for (const c of criterios) {
+      const diferencia = valorCriterio(c, b, extras) - valorCriterio(c, a, extras);
+      if (diferencia !== 0) return diferencia;
+    }
     return 0;
   };
   const ordenadas = [...filas].sort((a, b) => comparar(a, b) || a.puestoZona - b.puestoZona || a.zona.localeCompare(b.zona));

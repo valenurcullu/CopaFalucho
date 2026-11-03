@@ -7,6 +7,7 @@ import { InvitacionInstalar } from "@/components/pwa/InvitacionInstalar";
 import { ProveedorPwa } from "@/components/pwa/ProveedorPwa";
 import { EstadoDatos } from "@/components/layout/EstadoDatos";
 import { marca } from "@/config/marca";
+import { torneoConfig } from "@/config/torneo";
 import { obtenerTorneo } from "@/lib/torneo";
 import { fuenteTexto, fuenteTitulos } from "@/theme/fuentes";
 import { cssVariablesTema } from "@/theme/variables";
@@ -46,7 +47,12 @@ async function EstadoConDatos() {
 
 async function BarraConDatos() {
   const { partidos } = await obtenerTorneo();
-  return <BarraPestanas hayEnVivo={partidos.some((p) => p.estado === "en_juego")} />;
+  return (
+    <BarraPestanas
+      horarios={partidos.map(({ fecha, hora, estado }) => ({ fecha, hora, estado }))}
+      duracion={{ duracionMinutos: torneoConfig.duracionMinutos, descansoMinutos: torneoConfig.descansoMinutos }}
+    />
+  );
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

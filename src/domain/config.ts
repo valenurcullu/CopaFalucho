@@ -1,10 +1,16 @@
 import type { Fase } from "./tipos";
 
 export type CriterioDesempate =
+  /** Puntos en los partidos entre los empatados. */
+  | "enfrentamiento_directo"
   | "diferencia_gol"
   | "goles_a_favor"
+  /** Menos es mejor. */
+  | "goles_en_contra"
+  /** Menos tarjetas es mejor (amarilla y roja pesan según `fairPlay`). */
   | "fair_play"
-  | "enfrentamiento_directo";
+  /** Mejor puesto en el ranking del año anterior (columna ranking_anterior de Equipos). */
+  | "ranking_anterior";
 
 /** De dónde sale cada equipo de una llave de fase final. */
 export type OrigenLlave =
@@ -27,8 +33,13 @@ export interface LlaveConfig {
 export interface TorneoConfig {
   edicion: number;
   puntos: { victoria: number; empate: number; derrota: number };
-  /** Se aplican en orden después de los puntos. */
+  /** Desempate dentro de una zona. Se aplican en orden después de los puntos. */
   desempate: CriterioDesempate[];
+  /**
+   * Desempate de la tabla general de clasificados (equipos de distintas
+   * zonas, así que no se usa el enfrentamiento directo).
+   */
+  desempateGeneral: CriterioDesempate[];
   fairPlay: { amarilla: number; roja: number };
   formato: {
     clasificadosPorZona: number;
@@ -46,8 +57,16 @@ export interface TorneoConfig {
      */
     llaves: "auto" | LlaveConfig[];
   };
-  /** Duración de un partido, para validar los minutos de los eventos. */
+  /** Duración de un partido (sin el descanso). */
   duracionMinutos: number;
+  /** Descanso entre tiempos. Con la duración, define cuándo "se está jugando" un partido según la hora. */
+  descansoMinutos: number;
+  sanciones: {
+    /** Amarillas acumuladas que dan una fecha de suspensión. */
+    amarillasParaSuspension: number;
+    /** A partir de esta fase se limpian las amarillas acumuladas. */
+    limpiarAmarillasEn: Fase | null;
+  };
   jugadores: {
     mostrarFichas: boolean;
     mostrarPesoAltura: boolean;

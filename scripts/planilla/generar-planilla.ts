@@ -14,12 +14,12 @@ const CARPETA = path.join(process.cwd(), "data");
 const HOJAS = ["Equipos", "Partidos", "Eventos", "Jugadores"] as const;
 
 /** Columnas que se guardan como número; el resto va como texto plano. */
-const NUMERICAS = new Set(["año", "fecha_nro", "goles_local", "goles_visitante", "penales_local", "penales_visitante", "minuto", "número", "peso_kg", "altura_cm"]);
+const NUMERICAS = new Set(["año", "ranking_anterior", "puntos_descontados", "fecha_nro", "goles_local", "goles_visitante", "penales_local", "penales_visitante", "minuto", "número", "peso_kg", "altura_cm"]);
 
 /** Listas desplegables para que no se carguen valores inválidos. */
 const OPCIONES: Record<string, string[]> = {
   fase: ["zona", "octavos", "cuartos", "semis", "tercer puesto", "final"],
-  estado: ["programado", "en juego", "finalizado"],
+  estado: ["programado", "finalizado"],
   tipo: ["gol", "gol en contra", "amarilla", "roja"],
 };
 
@@ -28,7 +28,9 @@ const INSTRUCCIONES = [
   [""],
   ["Los nombres de las pestañas y de las columnas tienen que quedar exactamente así. La app se actualiza sola en 5 a 10 minutos."],
   ["Equipos: id = cómo se lo nombra (2001, 8YPICO, RDM). año, nombre y sigla son opcionales. En alias van otras formas de escribirlo, separadas por coma (\"8 y pico, 80\")."],
-  ["Partidos: al terminar, escribí goles_local y goles_visitante y poné estado = finalizado. Estados: programado / en juego / finalizado."],
+  ["Equipos: ranking_anterior = puesto del año pasado (último desempate). puntos_descontados = sanción (no mandar árbitro: 3). foto_url = link a la foto de perfil (opcional)."],
+  ["Partidos: al terminar, escribí goles_local y goles_visitante y poné estado = finalizado. Estados: programado / finalizado. Lo que se está jugando lo muestra la app sola según la hora."],
+  ["Si un equipo pierde por no presentarse o por jugador no habilitado, cargá 3-0 en goles_local / goles_visitante."],
   ["Partidos de fase final: completá la columna llave (C1, S1, F…) y dejá local y visitante vacíos: la app los completa sola."],
   ["Si una llave termina empatada, cargá penales_local y penales_visitante."],
   ["árbitro: un nombre, o la clase que arbitra (\"2000\")."],

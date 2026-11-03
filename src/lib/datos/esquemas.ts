@@ -17,7 +17,7 @@ import {
  * Es el contrato con el admin: la planilla de ejemplo se genera desde acá.
  */
 export const COLUMNAS: Record<Hoja, readonly string[]> = {
-  Equipos: ["id", "año", "zona", "nombre", "sigla", "alias", "escudo_url"],
+  Equipos: ["id", "año", "zona", "nombre", "sigla", "alias", "foto_url", "ranking_anterior", "puntos_descontados"],
   Partidos: [
     "id",
     "fase",
@@ -61,9 +61,9 @@ const ALIAS_FASE: Record<string, Fase> = {
 const ALIAS_ESTADO: Record<string, EstadoPartido> = {
   programado: "programado",
   pendiente: "programado",
-  "en juego": "en_juego",
-  jugando: "en_juego",
-  "en vivo": "en_juego",
+  // Se aceptan por compatibilidad, pero no se muestran como "en vivo".
+  "en juego": "programado",
+  jugando: "programado",
   finalizado: "finalizado",
   terminado: "finalizado",
   jugado: "finalizado",
@@ -88,7 +88,9 @@ export const filaEquipo = z
     sigla: textoOpcional(),
     /** Otros nombres con los que se escribe el equipo, separados por coma: "90, 1990". */
     alias: textoOpcional(),
-    escudo_url: textoOpcional(),
+    foto_url: textoOpcional(),
+    ranking_anterior: enteroOpcional("El ranking anterior", { min: 1, max: 999 }),
+    puntos_descontados: enteroOpcional("Los puntos descontados", { min: 0, max: 99 }),
   })
   .transform((f, ctx) => {
     const id = f.id ?? (f.anio !== null ? String(f.anio) : null);

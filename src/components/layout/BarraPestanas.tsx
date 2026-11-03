@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentType, SVGProps } from "react";
+import { useAhora } from "@/hooks/useAhora";
+import { partidosEnCancha, type Duracion } from "@/lib/horario";
 import { IconoEquipos, IconoFixture, IconoLlaves, IconoStats, IconoTablas } from "@/components/ui/iconos";
 
 interface Pestania {
@@ -24,8 +26,16 @@ const PESTANIAS: Pestania[] = [
 const estaActiva = (p: Pestania, ruta: string) =>
   p.href === "/" ? ruta === "/" : [p.href, ...(p.incluye ?? [])].some((r) => ruta === r || ruta.startsWith(`${r}/`));
 
-export function BarraPestanas({ hayEnVivo = false }: { hayEnVivo?: boolean }) {
+interface HorarioPartido {
+  fecha: string | null;
+  hora: string | null;
+  estado: "programado" | "finalizado";
+}
+
+export function BarraPestanas({ horarios = [], duracion }: { horarios?: HorarioPartido[]; duracion?: Duracion }) {
   const ruta = usePathname();
+  const ahora = useAhora(60_000);
+  const hayEnCancha = !!ahora && !!duracion && partidosEnCancha(horarios, ahora, duracion).length > 0;
   return (
     <nav
       aria-label="Secciones"
@@ -45,9 +55,9 @@ export function BarraPestanas({ hayEnVivo = false }: { hayEnVivo?: boolean }) {
               >
                 <span className={`relative grid h-7 w-12 place-items-center rounded-full transition-colors ${activa ? "bg-marca/10" : ""}`}>
                   <p.Icono className="size-[22px]" />
-                  {p.href === "/" && hayEnVivo && (
-                    <span className="absolute right-1.5 top-0 size-2.5 rounded-full bg-vivo ring-2 ring-superficie">
-                      <span className="sr-only">Hay partidos en juego</span>
+                  {p.href === "/" && hayEnCancha && (
+                    <span className="absolute right-1.5 top-0 size-2.5 rounded-full bg-secundario ring-2 ring-superficie">
+                      <span className="sr-only">Hay partidos jugándose ahora</span>
                     </span>
                   )}
                 </span>

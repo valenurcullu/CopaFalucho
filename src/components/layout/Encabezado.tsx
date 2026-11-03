@@ -11,13 +11,13 @@ export function Encabezado({ children }: { children?: ReactNode }) {
         <Link href="/" className="-ml-1 flex min-h-11 items-center gap-2.5 rounded-lg pr-2" aria-label={`${marca.nombreTorneo}, inicio`}>
           <Image src={marca.logo.src} alt="" width={26} height={40} priority className="h-10 w-auto drop-shadow" />
           <span className="leading-none">
-            <span className="block font-titulos text-xl font-extrabold uppercase tracking-wide">{marca.nombreTorneo}</span>
-            <span className="block text-[11px] font-medium opacity-80">
+            <span className="block whitespace-nowrap font-titulos text-xl font-extrabold uppercase tracking-wide">{marca.nombreTorneo}</span>
+            <span className="block whitespace-nowrap text-[11px] font-medium opacity-80">
               {marca.club} · {torneoConfig.edicion}
             </span>
           </span>
         </Link>
-        <div className="ml-auto">{children}</div>
+        <div className="ml-auto min-w-0">{children}</div>
       </div>
     </header>
   );

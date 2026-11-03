@@ -51,6 +51,39 @@ function indicePorNombre(jugadores: Jugador[]) {
   };
 }
 
+/** Máximo de la lista de buena fe de los equipos combinados (sin año único). */
+const MAXIMO_COMBINADO = 20;
+
+/**
+ * Controles del reglamento sobre la hoja Jugadores: nadie puede jugar en dos
+ * equipos y los combinados tienen una lista de hasta 20.
+ */
+function controlarListas(
+  jugadores: Jugador[],
+  equipos: Map<string, Equipo>,
+  avisar: (indice: number, mensaje: string) => void,
+  filas: Map<string, number>,
+) {
+  const porNombre = new Map<string, Jugador[]>();
+  for (const j of jugadores) {
+    const clave = normalizarNombre(j.nombre);
+    porNombre.set(clave, [...(porNombre.get(clave) ?? []), j]);
+  }
+  for (const repetidos of porNombre.values()) {
+    const enEquipos = new Set(repetidos.map((j) => j.equipoId));
+    if (enEquipos.size < 2) continue;
+    const nombres = [...enEquipos].map((id) => equipos.get(id)!.nombre).join(" y ");
+    avisar(filas.get(repetidos[1].id)!, `${repetidos[0].nombre} figura en ${nombres}: el reglamento no permite jugar en dos equipos`);
+  }
+  for (const equipo of equipos.values()) {
+    if (equipo.anio !== null) continue;
+    const lista = jugadores.filter((j) => j.equipoId === equipo.id);
+    if (lista.length > MAXIMO_COMBINADO) {
+      avisar(filas.get(lista[MAXIMO_COMBINADO].id)!, `${equipo.nombre} tiene ${lista.length} jugadores: la lista de un combinado es de hasta ${MAXIMO_COMBINADO}`);
+    }
+  }
+}
+
 /** Jugador que aparece en Eventos pero no en la hoja Jugadores. */
 function jugadorDesdeEvento(equipoId: string, texto: string, existentes: Map<string, Jugador>): Jugador {
   const base = `${equipoId}-${normalizarCodigo(texto)}`;
@@ -104,7 +137,9 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
       zona: fila.zona,
       nombre,
       sigla: fila.sigla ?? (fila.anio !== null ? `’${String(fila.anio).slice(-2)}` : fila.id.slice(0, 4)),
-      escudoUrl: fila.escudo_url,
+      fotoUrl: fila.foto_url,
+      rankingAnterior: fila.ranking_anterior,
+      puntosDescontados: fila.puntos_descontados ?? 0,
     });
     registrarAlias(fila.id, fila.id);
     registrarAlias(nombre, fila.id);
@@ -125,6 +160,7 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
 
   // Jugadores
   const jugadores = new Map<string, Jugador>();
+  const filasJugador = new Map<string, number>();
   for (const { fila, indice } of validar("Jugadores", filaJugador)) {
     if (jugadores.has(fila.id)) {
       avisar("error", "Jugadores", indice, `El jugador ${fila.id} está repetido`);
@@ -147,7 +183,9 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
       alturaCm: fila.altura_cm,
       soloEnEventos: false,
     });
+    filasJugador.set(fila.id, indice);
   }
+  controlarListas([...jugadores.values()], equipos, (indice, mensaje) => avisar("advertencia", "Jugadores", indice, mensaje), filasJugador);
   const buscarJugador = indicePorNombre([...jugadores.values()]);
 
   // Partidos

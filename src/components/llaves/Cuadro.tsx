@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { EnVivo } from "@/components/ui/basicos";
 import { EscudoClase } from "@/components/ui/EscudoClase";
 import type { Equipo, Fase } from "@/domain/tipos";
 import { formatearDiaCorto } from "@/lib/formato";
@@ -37,17 +36,14 @@ function Lado({ equipo, etiqueta, goles, penales, gana, pierde }: { equipo: Equi
 function TarjetaCruce({ cruce }: { cruce: CruceCuadro }) {
   const p = cruce.partido;
   const ganador = p?.ganadorId ?? null;
-  const enJuego = p?.estado === "en_juego";
   return (
     <article
       aria-label={cruce.nombre}
-      className={`w-60 overflow-hidden rounded-xl bg-superficie ring-1 ${enJuego ? "ring-2 ring-vivo" : "ring-borde"}`}
+      className="w-60 overflow-hidden rounded-xl bg-superficie ring-1 ring-borde"
     >
       <div className="flex items-center justify-between border-b border-borde px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-texto-suave">
         <span>{cruce.nombre}</span>
-        {enJuego ? (
-          <EnVivo />
-        ) : p?.estado === "finalizado" ? (
+        {p?.estado === "finalizado" ? (
           <span>Final</span>
         ) : (
           <span>{p ? `${formatearDiaCorto(p.fecha)}${p.hora ? ` · ${p.hora}` : ""}` : "A programar"}</span>

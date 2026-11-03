@@ -15,7 +15,7 @@ import { APELLIDOS, ARBITROS, NOMBRES } from "./nombres";
 
 const SEMILLA = 1943; // año de fundación del club
 const CARPETA = path.join(process.cwd(), "data", "ejemplo");
-const DURACION = 50;
+const DURACION = 40;
 const CANCHAS = ["Cancha 1", "Cancha 2", "Cancha 3", "Cancha 4"];
 const ZONAS = ["A", "B", "C", "D"];
 /** 15 clases y un equipo de varias generaciones, como pasa en la copa real. */
@@ -48,14 +48,16 @@ const PLANTEL: Posicion[] = [
 
 const PESO_GOL: Record<Posicion, number> = { Arquero: 0.05, Defensor: 1, Mediocampista: 3, Delantero: 6 };
 
+/** Nombres ya usados en todo el torneo: nadie puede jugar en dos equipos. */
+const NOMBRES_USADOS = new Set<string>();
+
 function generarJugadores(azar: Azar, equipo: string): JugadorEjemplo[] {
   const numerosLibres = azar.mezclar(Array.from({ length: 30 }, (_, i) => i + 2).filter((n) => n !== 12));
-  const usados = new Set<string>();
   return PLANTEL.map((posicion, i) => {
     let nombre: string;
     do nombre = `${azar.elegir(NOMBRES)} ${azar.elegir(APELLIDOS)}`;
-    while (usados.has(nombre));
-    usados.add(nombre);
+    while (NOMBRES_USADOS.has(nombre));
+    NOMBRES_USADOS.add(nombre);
     const numero = posicion === "Arquero" ? (i === 0 ? 1 : 12) : numerosLibres.pop()!;
     const altura = azar.entero(posicion === "Arquero" ? 180 : 166, posicion === "Arquero" ? 194 : 190);
     const peso = Math.round((altura - 100) * (0.85 + azar.siguiente() * 0.35));
@@ -140,7 +142,7 @@ function aCrudas(columnas: readonly string[], filas: Fila[]): FilaCruda[] {
 
 /**
  * Escenario de la fase final: cuartos jugados (uno por penales), una semi
- * terminada, la otra en juego y la final por jugarse. Los cruces salen de la
+ * terminada, la otra y la final por jugarse. Los cruces salen de la
  * misma lógica que usa la app, así que el ejemplo siempre es consistente.
  */
 function simularFaseFinal(
@@ -151,13 +153,12 @@ function simularFaseFinal(
   jugadores: Fila[],
   plantel: Map<string, JugadorEjemplo[]>,
 ) {
-  const guion: Partial<Record<string, { estado: "finalizado" | "en juego"; hastaMinuto?: number; golesForzados?: [number, number] }>> = {
+  const guion: Partial<Record<string, { estado: "finalizado"; golesForzados?: [number, number] }>> = {
     CU1: { estado: "finalizado" },
     CU2: { estado: "finalizado", golesForzados: [1, 1] },
     CU3: { estado: "finalizado" },
     CU4: { estado: "finalizado" },
     SE1: { estado: "finalizado" },
-    SE2: { estado: "en juego", hastaMinuto: 32 },
   };
   const fases: Fase[] = ["octavos", "cuartos", "semis", "tercer_puesto", "final"];
   for (const fase of fases) {
@@ -195,13 +196,16 @@ async function main() {
 
   // Equipos y sorteo de zonas
   const sorteo = azar.mezclar(CLASES.map(idDe));
+  const ranking = new Map(azar.mezclar(CLASES.map(idDe)).map((id, i) => [id, i + 1]));
   const zonaDe = new Map<string, string>();
   sorteo.forEach((id, i) => zonaDe.set(id, ZONAS[Math.floor(i / 4)]));
   const equipos: Fila[] = CLASES.map((c) =>
     typeof c === "number"
-      ? [String(c), c, zonaDe.get(String(c))!, null, null, null, null]
-      : [c.id, null, zonaDe.get(c.id)!, c.nombre, c.sigla, c.alias, null],
+      ? [String(c), c, zonaDe.get(String(c))!, null, null, null, null, ranking.get(String(c))!, null]
+      : [c.id, null, zonaDe.get(c.id)!, c.nombre, c.sigla, c.alias, null, ranking.get(c.id)!, null],
   );
+  // Un equipo que no mandó árbitro: el reglamento le descuenta 3 puntos.
+  equipos[5][COLUMNAS.Equipos.indexOf("puntos_descontados")] = 3;
 
   // Jugadores
   const plantel = new Map<string, JugadorEjemplo[]>();

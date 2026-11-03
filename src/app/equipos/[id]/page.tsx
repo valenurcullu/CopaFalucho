@@ -11,6 +11,7 @@ import { Racha } from "@/components/ui/Racha";
 import { torneoConfig } from "@/config/torneo";
 import { formatearDiaCorto, nombreJugador } from "@/lib/formato";
 import { obtenerTorneo } from "@/lib/torneo";
+import { TEXTO_MOTIVO } from "@/lib/torneo/sanciones";
 import { aTarjeta, indices } from "@/lib/torneo/vista";
 
 export async function generateStaticParams() {
@@ -46,6 +47,7 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
     .filter((j) => j.equipoId === id)
     .sort((a, b) => ordenPosicion(a.posicion) - ordenPosicion(b.posicion) || (a.numero ?? 999) - (b.numero ?? 999));
   const { mostrarFichas } = torneoConfig.jugadores;
+  const suspendidos = torneo.sanciones.filter((s) => s.equipoId === id && !s.cumplida);
 
   return (
     <>
@@ -77,6 +79,22 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
             </Tarjeta>
           ))}
         </dl>
+      )}
+
+      {suspendidos.length > 0 && (
+        <div role="note" className="mt-3 rounded-2xl border border-secundario/40 bg-secundario/8 p-3 text-sm">
+          <p className="font-semibold text-secundario">Suspendidos para el próximo partido</p>
+          <ul className="mt-1 space-y-0.5">
+            {suspendidos.map((s) => {
+              const j = jugadores.get(s.jugadorId);
+              return (
+                <li key={`${s.jugadorId}-${s.partidoId}`}>
+                  {j ? nombreJugador(j) : s.jugadorId} <span className="text-texto-suave">· {TEXTO_MOTIVO[s.motivo]}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
 
       <TituloSeccion>Partidos</TituloSeccion>

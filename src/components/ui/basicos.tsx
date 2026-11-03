@@ -26,19 +26,15 @@ export function TituloSeccion({ children, id, extra }: { children: ReactNode; id
   );
 }
 
-/** Indicador de partido en juego: bien visible y con animación suave. */
-export function EnVivo({ grande = false }: { grande?: boolean }) {
+/** El partido se está jugando según el horario (no es un resultado en vivo). */
+export function Jugandose() {
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full bg-vivo font-bold uppercase tracking-wider text-vivo-texto ${
-        grande ? "px-3 py-1 text-sm" : "px-2 py-0.5 text-[11px]"
-      }`}
-    >
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-marca px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-marca-texto">
       <span className="relative flex size-2">
         <span className="absolute inline-flex size-full animate-ping rounded-full bg-current opacity-75" />
         <span className="relative inline-flex size-2 rounded-full bg-current" />
       </span>
-      En juego
+      Jugándose
     </span>
   );
 }

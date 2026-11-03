@@ -3,6 +3,7 @@ import type { DatosTorneo, Equipo, Evento, Jugador, Partido } from "@/domain/tip
 import { tablaGoleadores, tablaTarjetas, estadisticasPorJugador, type EstadisticasJugador, type FilaGoleador, type FilaTarjetas } from "./estadisticas";
 import { ErrorFormato, llavesEstandar, ORDEN_FASES, resolverLlaves } from "./llaves";
 import { calcularMarcador, ganadorDe, type Marcador } from "./marcador";
+import { calcularSanciones, type Sancion } from "./sanciones";
 import { calcularTabla, tablaGeneral, type FilaGeneral, type FilaTabla } from "./tablas";
 
 export type Resultado = "G" | "E" | "P";
@@ -48,6 +49,8 @@ export interface Torneo {
   llaves: LlaveVista[];
   goleadores: FilaGoleador[];
   tarjetas: FilaTarjetas[];
+  /** Suspensiones según el reglamento (amarillas acumuladas, doble amarilla, roja). */
+  sanciones: Sancion[];
   /** Últimos resultados de cada equipo, del más viejo al más nuevo. */
   rachas: Record<string, Resultado[]>;
   estadisticasJugadores: Record<string, EstadisticasJugador>;
@@ -100,6 +103,10 @@ export function analizarTorneo(datos: DatosTorneo, config: TorneoConfig, largoRa
   }
 
   // Zonas
+  const extras = {
+    descuentos: new Map(datos.equipos.map((e) => [e.id, e.puntosDescontados])),
+    rankingAnterior: new Map(datos.equipos.filter((e) => e.rankingAnterior !== null).map((e) => [e.id, e.rankingAnterior!])),
+  };
   const nombresZonas = [...new Set(datos.equipos.map((e) => e.zona).filter((z): z is string => !!z))].sort();
   const partidosZona = datos.partidos.filter((p) => p.fase === "zona");
   const zonas: ZonaVista[] = nombresZonas.map((zona) => {
@@ -111,6 +118,7 @@ export function analizarTorneo(datos: DatosTorneo, config: TorneoConfig, largoRa
       finalizados.map((p) => ({ id: p.id, localId: p.localId!, visitanteId: p.visitanteId!, marcador: marcadorDe(p, p.localId, p.visitanteId)! })),
       finalizados.flatMap((p) => eventosDe(p.id)),
       config,
+      extras,
     );
     return { zona, completa: deLaZona.length > 0 && finalizados.length === deLaZona.length, tabla };
   });
@@ -130,7 +138,7 @@ export function analizarTorneo(datos: DatosTorneo, config: TorneoConfig, largoRa
   const partidoDeLlave = new Map<string, Partido>();
   for (const p of datos.partidos) if (p.fase !== "zona" && p.llave) partidoDeLlave.set(p.llave, p);
 
-  const general = tablaGeneral(zonas, config.formato.clasificadosPorZona, config);
+  const general = tablaGeneral(zonas, config.formato.clasificadosPorZona, config.desempateGeneral, extras);
   const zonasCompletas = zonas.length > 0 && zonas.every((z) => z.completa);
 
   const equipoEnPuesto = (zona: string | null, puesto: number) => {
@@ -221,6 +229,7 @@ export function analizarTorneo(datos: DatosTorneo, config: TorneoConfig, largoRa
     })),
     goleadores: tablaGoleadores(datos.eventos, datos.jugadores),
     tarjetas: tablaTarjetas(datos.eventos, datos.jugadores),
+    sanciones: calcularSanciones(partidos, datos.eventos, config.sanciones),
     rachas,
     estadisticasJugadores: Object.fromEntries(estadisticasPorJugador(datos.eventos)),
     erroresFormato,

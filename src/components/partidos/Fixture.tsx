@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Vacio } from "@/components/ui/basicos";
 import type { Equipo } from "@/domain/tipos";
-import { formatearDia, hoyEnBuenosAires } from "@/lib/formato";
+import { useAhora } from "@/hooks/useAhora";
+import { formatearDia, formatearDiaCorto, hoyEnBuenosAires } from "@/lib/formato";
+import { partidosEnCancha, proximoTurno, seEstaJugando, type Duracion } from "@/lib/horario";
 import type { PartidoTarjeta } from "@/lib/torneo/vista";
 import { TarjetaPartido } from "./TarjetaPartido";
 
@@ -14,6 +16,7 @@ interface Props {
   equipos: Equipo[];
   zonas: string[];
   conFichas: boolean;
+  duracion: Duracion;
 }
 
 function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -31,7 +34,8 @@ function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => v
   );
 }
 
-export function Fixture({ partidos, equipos, zonas, conFichas }: Props) {
+export function Fixture({ partidos, equipos, zonas, conFichas, duracion }: Props) {
+  const ahora = useAhora();
   const [zona, setZona] = useState<string | null>(null);
   const [equipoId, setEquipoId] = useState("");
   const yaDesplazo = useRef(false);
@@ -56,32 +60,49 @@ export function Fixture({ partidos, equipos, zonas, conFichas }: Props) {
     return [...grupos];
   }, [filtrados]);
 
-  const enJuego = partidos.filter((p) => p.estado === "en_juego");
+  // Según la hora: lo que se está jugando ahora o, si no hay nada, el próximo turno.
+  const enCancha = ahora ? partidosEnCancha(partidos, ahora, duracion) : [];
+  const proximos = ahora && enCancha.length === 0 ? proximoTurno(partidos, ahora) : [];
+  const jugandose = (p: PartidoTarjeta) => !!ahora && seEstaJugando(p, ahora, duracion);
 
-  // Al abrir, salta al día de hoy (o al próximo con partidos) si no hay nada en juego.
+  // Al abrir, salta al día de hoy (o al próximo con partidos) si no hay nada en la cancha.
   useEffect(() => {
-    if (yaDesplazo.current || enJuego.length > 0) return;
+    if (yaDesplazo.current || enCancha.length > 0) return;
     yaDesplazo.current = true;
     const hoy = hoyEnBuenosAires();
     const destino = porDia.find(([fecha]) => fecha !== "sin-fecha" && fecha >= hoy)?.[0];
     if (destino && destino !== porDia[0][0]) {
       document.getElementById(`dia-${destino}`)?.scrollIntoView({ block: "start" });
     }
-  }, [porDia, enJuego.length]);
+  }, [porDia, enCancha.length]);
 
   return (
     <div>
-      {enJuego.length > 0 && (
-        <section aria-labelledby="titulo-en-juego" className="mb-6">
-          <h2 id="titulo-en-juego" className="mb-2 flex items-center gap-2 font-titulos text-xl font-bold uppercase tracking-wide">
+      {enCancha.length > 0 && (
+        <section aria-labelledby="titulo-en-cancha" className="mb-6">
+          <h2 id="titulo-en-cancha" className="mb-1 flex items-center gap-2 font-titulos text-xl font-bold uppercase tracking-wide text-marca">
             <span className="relative flex size-3">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-vivo opacity-75" />
-              <span className="relative inline-flex size-3 rounded-full bg-vivo" />
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-marca opacity-60" />
+              <span className="relative inline-flex size-3 rounded-full bg-marca" />
             </span>
-            Ahora en la cancha
+            Se están jugando ahora
+          </h2>
+          <p className="mb-2 text-xs text-texto-suave">Según el horario. El resultado se carga cuando termina el partido.</p>
+          <div className="flex flex-col gap-3">
+            {enCancha.map((p) => (
+              <TarjetaPartido key={p.id} partido={p} conFichas={conFichas} jugandose />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {proximos.length > 0 && (
+        <section aria-labelledby="titulo-proximos" className="mb-6">
+          <h2 id="titulo-proximos" className="mb-2 font-titulos text-xl font-bold uppercase tracking-wide text-marca">
+            Próximos partidos · {formatearDiaCorto(proximos[0].fecha)} {proximos[0].hora} h
           </h2>
           <div className="flex flex-col gap-3">
-            {enJuego.map((p) => (
+            {proximos.map((p) => (
               <TarjetaPartido key={p.id} partido={p} conFichas={conFichas} />
             ))}
           </div>
@@ -128,7 +149,7 @@ export function Fixture({ partidos, equipos, zonas, conFichas }: Props) {
           </h2>
           <div className="flex flex-col gap-3">
             {lista.map((p) => (
-              <TarjetaPartido key={p.id} partido={p} conFichas={conFichas} />
+              <TarjetaPartido key={p.id} partido={p} conFichas={conFichas} jugandose={jugandose(p)} />
             ))}
           </div>
         </section>

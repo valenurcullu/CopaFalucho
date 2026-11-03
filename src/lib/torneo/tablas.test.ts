@@ -48,8 +48,31 @@ describe("ganadorDe", () => {
     expect(ganadorDe(base, { local: 1, visitante: 1 })).toBeNull();
   });
 
-  it("un partido en juego no tiene ganador", () => {
-    expect(ganadorDe({ ...base, estado: "en_juego" }, { local: 3, visitante: 0 })).toBeNull();
+  it("un partido sin terminar no tiene ganador", () => {
+    expect(ganadorDe({ ...base, estado: "programado" }, { local: 3, visitante: 0 })).toBeNull();
+  });
+});
+
+describe("criterios del reglamento", () => {
+  it("menos goles en contra desempata cuando todo lo demás es igual", () => {
+    const tabla = calcularTabla(["A", "B", "C"], [p("A", 1, 0, "C"), p("B", 2, 1, "C")], [], reglas(["diferencia_gol", "goles_en_contra"]));
+    // A y B: 3 pts y dg +1. A recibió 0 goles y B 1: pasa A.
+    expect(orden(tabla).slice(0, 2)).toEqual(["A", "B"]);
+    const alReves = calcularTabla(["A", "B", "C"], [p("A", 1, 0, "C"), p("B", 2, 1, "C")], [], reglas(["diferencia_gol", "goles_a_favor"]));
+    expect(orden(alReves).slice(0, 2)).toEqual(["B", "A"]);
+  });
+
+  it("el ranking del año anterior es el último desempate", () => {
+    const tabla = calcularTabla(["A", "B"], [p("A", 1, 1, "B")], [], reglas(["diferencia_gol", "ranking_anterior"]), {
+      rankingAnterior: new Map([["A", 7], ["B", 2]]),
+    });
+    expect(orden(tabla)).toEqual(["B", "A"]);
+    expect(tabla.every((f) => !f.empateSinResolver)).toBe(true);
+  });
+
+  it("los puntos descontados se restan", () => {
+    const tabla = calcularTabla(["A", "B"], [p("A", 1, 0, "B")], [], reglas(), { descuentos: new Map([["A", 3]]) });
+    expect(tabla.find((f) => f.equipoId === "A")).toMatchObject({ pts: 0, puntosDescontados: 3 });
   });
 });
 

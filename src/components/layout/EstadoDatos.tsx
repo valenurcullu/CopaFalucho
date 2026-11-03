@@ -30,9 +30,9 @@ export function EstadoDatos({ actualizadoEn }: { actualizadoEn: string }) {
 
   if (!conectado) {
     return (
-      <span role="status" className="flex min-h-11 items-center gap-1.5 rounded-full bg-white/12 px-3 text-xs font-semibold">
+      <span role="status" className="flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white/12 px-3 text-xs font-semibold">
         <IconoSinSenal className="size-4" />
-        Sin señal{hace && ` · datos ${hace}`}
+        Sin señal
       </span>
     );
   }
@@ -41,11 +41,11 @@ export function EstadoDatos({ actualizadoEn }: { actualizadoEn: string }) {
     <button
       type="button"
       onClick={() => iniciar(() => router.refresh())}
-      className="-mr-2 flex min-h-11 items-center gap-1.5 rounded-full px-3 text-xs font-medium opacity-90 hover:bg-white/10"
+      className="-mr-2 flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-medium opacity-90 hover:bg-white/10"
       aria-label={`Actualizar datos. Última actualización: ${hace || "recién"}`}
     >
       <span aria-live="polite" className="tabular-nums">
-        {actualizando ? "Actualizando…" : hace && `Actualizado ${hace}`}
+        {actualizando ? "Actualizando…" : hace}
       </span>
       <IconoActualizar className={`size-5 ${actualizando ? "animate-spin" : ""}`} />
     </button>

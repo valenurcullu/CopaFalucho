@@ -64,15 +64,81 @@ function Lista({ filas, conFichas, valor }: { filas: FilaStat[]; conFichas: bool
   );
 }
 
-export function Estadisticas({ goleadores, tarjetas, conFichas }: { goleadores: FilaStat[]; tarjetas: FilaStat[]; conFichas: boolean }) {
-  const [vista, setVista] = useState<"goles" | "tarjetas">("goles");
+export interface FilaSancion {
+  jugadorId: string;
+  nombre: string;
+  equipo: string;
+  motivo: string;
+  /** "vs. Clase 2003 · sáb 5/12", o null si el próximo partido no está en el fixture. */
+  cumpleEn: string | null;
+  cumplida: boolean;
+}
+
+function ListaSanciones({ filas, conFichas }: { filas: FilaSancion[]; conFichas: boolean }) {
+  const pendientes = filas.filter((f) => !f.cumplida);
+  const cumplidas = filas.filter((f) => f.cumplida);
+  const item = (f: FilaSancion, i: number) => {
+    const contenido = (
+      <span className="min-w-0 flex-1">
+        <span className="block truncate font-semibold">{f.nombre}</span>
+        <span className="block text-xs text-texto-suave">
+          {f.equipo} · {f.motivo}
+        </span>
+        <span className={`block text-xs font-semibold ${f.cumplida ? "text-texto-suave" : "text-secundario"}`}>
+          {f.cumplida ? "Cumplida" : f.cumpleEn ? `No juega ${f.cumpleEn}` : "No juega el próximo partido"}
+        </span>
+      </span>
+    );
+    return (
+      <li key={`${f.jugadorId}-${i}`} className="border-b border-borde last:border-0">
+        {conFichas ? (
+          <Link href={`/jugadores/${f.jugadorId}`} prefetch={false} className="flex min-h-16 items-center gap-3 px-4 py-2 active:bg-superficie-alt">
+            {contenido}
+          </Link>
+        ) : (
+          <div className="flex min-h-16 items-center gap-3 px-4 py-2">{contenido}</div>
+        )}
+      </li>
+    );
+  };
+  return (
+    <div className="flex flex-col gap-4">
+      {pendientes.length === 0 ? <Vacio>No hay jugadores suspendidos para el próximo partido.</Vacio> : <Caja><ul>{pendientes.map(item)}</ul></Caja>}
+      {cumplidas.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-texto-suave">Ya cumplidas</h2>
+          <Caja>
+            <ul>{cumplidas.map(item)}</ul>
+          </Caja>
+        </section>
+      )}
+      <p className="text-xs text-texto-suave">
+        Según el reglamento: 3 amarillas o doble amarilla, 1 fecha (las amarillas se limpian en semis). La roja directa la define la comisión.
+      </p>
+    </div>
+  );
+}
+
+export function Estadisticas({
+  goleadores,
+  tarjetas,
+  sanciones,
+  conFichas,
+}: {
+  goleadores: FilaStat[];
+  tarjetas: FilaStat[];
+  sanciones: FilaSancion[];
+  conFichas: boolean;
+}) {
+  const [vista, setVista] = useState<"goles" | "tarjetas" | "sanciones">("goles");
   return (
     <div>
-      <div role="tablist" aria-label="Estadísticas" className="mb-4 grid grid-cols-2 rounded-full bg-superficie-alt p-1">
+      <div role="tablist" aria-label="Estadísticas" className="mb-4 grid grid-cols-3 rounded-full bg-superficie-alt p-1">
         {(
           [
             ["goles", "Goleadores"],
             ["tarjetas", "Tarjetas"],
+            ["sanciones", "Sanciones"],
           ] as const
         ).map(([id, titulo]) => (
           <button
@@ -90,7 +156,9 @@ export function Estadisticas({ goleadores, tarjetas, conFichas }: { goleadores: 
       </div>
 
       <div role="tabpanel" id={`panel-${vista}`} aria-labelledby={`pestania-${vista}`}>
-        {vista === "goles" ? (
+        {vista === "sanciones" ? (
+          <ListaSanciones filas={sanciones} conFichas={conFichas} />
+        ) : vista === "goles" ? (
           <Lista
             filas={goleadores}
             conFichas={conFichas}
