@@ -9,8 +9,8 @@ const partido = (id: string, fase: Fase = "zona", estado: "programado" | "finali
 });
 
 let n = 0;
-const tarjeta = (partidoId: string, tipo: "amarilla" | "roja", jugadorId = "A-1", equipoId = "A"): Evento => ({
-  id: `E${++n}`, partidoId, tipo, equipoId, jugadorId, minuto: null,
+const tarjeta = (partidoId: string, tipo: "amarilla" | "roja", jugadorId = "A-1", equipoId = "A", fechasSancion: number | null = null): Evento => ({
+  id: `E${++n}`, partidoId, tipo, equipoId, jugadorId, minuto: null, fechasSancion,
 });
 
 describe("calcularSanciones", () => {
@@ -18,7 +18,10 @@ describe("calcularSanciones", () => {
     const partidos = [partido("P1"), partido("P2"), partido("P3"), partido("P4", "cuartos", "programado")];
     const s = calcularSanciones(partidos, [tarjeta("P1", "amarilla"), tarjeta("P2", "amarilla"), tarjeta("P3", "amarilla")], reglas);
     expect(s).toEqual([
-      { jugadorId: "A-1", equipoId: "A", motivo: "amarillas", partidoId: "P3", cumpleEnPartidoId: "P4", cumplida: false },
+      {
+        jugadorId: "A-1", equipoId: "A", motivo: "amarillas", fechas: 1, aDefinir: false,
+        partidoId: "P3", cumpleEnPartidoId: "P4", fechasCumplidas: 0, cumplida: false,
+      },
     ]);
   });
 
@@ -39,7 +42,7 @@ describe("calcularSanciones", () => {
       [tarjeta("P1", "amarilla"), tarjeta("P1", "amarilla"), tarjeta("P2", "amarilla")],
       reglas,
     );
-    expect(s.map((x) => [x.motivo, x.partidoId, x.cumpleEnPartidoId, x.cumplida])).toEqual([["doble_amarilla", "P1", "P2", true]]);
+    expect(s.map((x) => [x.motivo, x.partidoId, x.cumpleEnPartidoId, x.cumplida])).toEqual([["doble_amarilla", "P1", null, true]]);
   });
 
   it("amarilla más roja en el mismo partido cuenta como doble amarilla", () => {
@@ -47,8 +50,14 @@ describe("calcularSanciones", () => {
     expect(s[0]).toMatchObject({ motivo: "doble_amarilla", cumpleEnPartidoId: null, cumplida: false });
   });
 
-  it("roja directa", () => {
+  it("roja directa sin fechas cargadas: 1 fecha a definir por la comisión", () => {
     const s = calcularSanciones([partido("P1"), partido("P2", "zona", "programado")], [tarjeta("P1", "roja", "B-7", "B")], reglas);
-    expect(s).toEqual([{ jugadorId: "B-7", equipoId: "B", motivo: "roja_directa", partidoId: "P1", cumpleEnPartidoId: "P2", cumplida: false }]);
+    expect(s[0]).toMatchObject({ jugadorId: "B-7", equipoId: "B", motivo: "roja_directa", fechas: 1, aDefinir: true, cumpleEnPartidoId: "P2" });
+  });
+
+  it("roja directa con las fechas que cargó la comisión", () => {
+    const partidos = [partido("P1"), partido("P2"), partido("P3", "cuartos", "programado"), partido("P4", "semis", "programado")];
+    const s = calcularSanciones(partidos, [tarjeta("P1", "roja", "A-1", "A", 3)], reglas);
+    expect(s[0]).toMatchObject({ fechas: 3, aDefinir: false, fechasCumplidas: 1, cumpleEnPartidoId: "P3", cumplida: false });
   });
 });

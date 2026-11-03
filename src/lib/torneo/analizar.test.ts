@@ -34,7 +34,7 @@ function partido(id: string, datos: Partial<Partido>): Partido {
 
 let numeroEvento = 0;
 const gol = (partidoId: string, equipoId: string, jugadorId: string | null = null, minuto = 10): Evento => ({
-  id: `E${++numeroEvento}`, partidoId, tipo: "gol", equipoId, jugadorId, minuto,
+  id: `E${++numeroEvento}`, partidoId, tipo: "gol", equipoId, jugadorId, minuto, fechasSancion: null,
 });
 const goles = (partidoId: string, equipoId: string, cantidad: number) => Array.from({ length: cantidad }, () => gol(partidoId, equipoId));
 
@@ -133,7 +133,7 @@ describe("analizarTorneo", () => {
 
 describe("estadísticas", () => {
   const jugadores = [jugador("1", "X", "Zoe"), jugador("2", "X", "Ana"), jugador("3", "Y", "Beto")];
-  const ev = (tipo: Evento["tipo"], jugadorId: string): Evento => ({ id: "e", partidoId: "P", tipo, equipoId: "X", jugadorId, minuto: 1 });
+  const ev = (tipo: Evento["tipo"], jugadorId: string): Evento => ({ id: "e", partidoId: "P", tipo, equipoId: "X", jugadorId, minuto: 1, fechasSancion: null });
 
   it("goleadores con posiciones compartidas, sin contar goles en contra", () => {
     const tabla = tablaGoleadores([ev("gol", "1"), ev("gol", "1"), ev("gol", "2"), ev("gol", "3"), ev("gol_en_contra", "3"), ev("amarilla", "2")], jugadores);

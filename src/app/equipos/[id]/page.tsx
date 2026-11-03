@@ -11,7 +11,7 @@ import { Racha } from "@/components/ui/Racha";
 import { torneoConfig } from "@/config/torneo";
 import { formatearDiaCorto, nombreJugador } from "@/lib/formato";
 import { obtenerTorneo } from "@/lib/torneo";
-import { TEXTO_MOTIVO } from "@/lib/torneo/sanciones";
+import { textoMotivo } from "@/lib/torneo/sanciones";
 import { aTarjeta, indices } from "@/lib/torneo/vista";
 
 export async function generateStaticParams() {
@@ -89,7 +89,7 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
               const j = jugadores.get(s.jugadorId);
               return (
                 <li key={`${s.jugadorId}-${s.partidoId}`}>
-                  {j ? nombreJugador(j) : s.jugadorId} <span className="text-texto-suave">· {TEXTO_MOTIVO[s.motivo]}</span>
+                  {j ? nombreJugador(j) : s.jugadorId} <span className="text-texto-suave">· {textoMotivo(s)}</span>
                 </li>
               );
             })}

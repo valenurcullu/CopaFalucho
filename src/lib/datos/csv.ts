@@ -20,6 +20,8 @@ const ALIAS_COLUMNAS: Record<string, string> = {
   goles_l: "goles_local",
   goles_v: "goles_visitante",
   referee: "arbitro",
+  fechas: "fechas_sancion",
+  fechas_de_sancion: "fechas_sancion",
 };
 
 /** "Año", " Número " o "fecha nro" → "anio", "numero", "fecha_nro". */

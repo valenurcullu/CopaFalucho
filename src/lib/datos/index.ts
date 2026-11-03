@@ -18,7 +18,8 @@ import { leerEjemplo, leerPlanilla } from "./fuentes";
 export const obtenerDatos = cache(async (): Promise<DatosTorneo> => {
   const idPlanilla = process.env.GOOGLE_SHEET_ID?.trim();
   const hojas = idPlanilla
-    ? await leerPlanilla(idPlanilla, torneoConfig.revalidarSegundos)
+    ? // Al desarrollar se lee la planilla en cada carga, para ver los cambios al instante.
+      await leerPlanilla(idPlanilla, process.env.NODE_ENV === "development" ? 0 : torneoConfig.revalidarSegundos)
     : await leerEjemplo();
   const datos = armarDatos(hojas, {
     origen: idPlanilla ? "planilla" : "ejemplo",

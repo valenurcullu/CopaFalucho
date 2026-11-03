@@ -36,7 +36,7 @@ export const COLUMNAS: Record<Hoja, readonly string[]> = {
     "penales_local",
     "penales_visitante",
   ],
-  Eventos: ["partido_id", "tipo", "equipo", "jugador", "minuto"],
+  Eventos: ["partido_id", "tipo", "equipo", "jugador", "minuto", "fechas_sancion"],
   Jugadores: ["id", "equipo", "nombre", "apodo", "número", "posición", "foto_url", "peso_kg", "altura_cm"],
 };
 
@@ -127,6 +127,8 @@ export const filaEvento = z.object({
   /** Id del jugador ("2001-07"), su nombre o su apodo. */
   jugador: textoOpcional(),
   minuto: enteroOpcional("El minuto", { min: 0, max: 200 }),
+  /** En una roja directa: cuántas fechas de suspensión definió la comisión. */
+  fechas_sancion: enteroOpcional("Las fechas de sanción", { min: 0, max: 50 }),
 });
 
 export const filaJugador = z.object({

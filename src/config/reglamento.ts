@@ -24,9 +24,8 @@ export const reglamento: SeccionReglamento[] = [
     ],
   },
   {
-    titulo: "Inscripción",
+    titulo: "Jugadores",
     parrafos: [
-      "Cada equipo entrega la inscripción antes del primer partido de su zona. Lo recaudado se destina a materiales para el club (kinesiología, gimnasio, cancha sintética, vestuarios).",
       "Los combinados entregan una lista de buena fe de hasta 20 jugadores para todo el torneo.",
       "Nadie puede jugar en dos equipos en una misma edición, y solo pueden jugar quienes hayan formado parte de algún equipo de rugby del club.",
     ],

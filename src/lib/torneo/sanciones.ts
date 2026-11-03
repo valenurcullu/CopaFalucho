@@ -8,19 +8,30 @@ export interface Sancion {
   jugadorId: string;
   equipoId: string;
   motivo: MotivoSancion;
+  /** Partidos de suspensión. */
+  fechas: number;
+  /** true si es una roja directa sin fechas cargadas: se cuenta 1 hasta que la comisión decida. */
+  aDefinir: boolean;
   /** Partido en el que se ganó la sanción. */
   partidoId: string;
-  /** Próximo partido del equipo, que el jugador no puede jugar. Null si todavía no está en el fixture. */
+  /** Próximo partido que el jugador no puede jugar. Null si ya cumplió o si todavía no está en el fixture. */
   cumpleEnPartidoId: string | null;
-  /** true cuando ese próximo partido ya se jugó. */
+  /** Partidos de suspensión ya jugados por el equipo. */
+  fechasCumplidas: number;
   cumplida: boolean;
 }
 
-export const TEXTO_MOTIVO: Record<MotivoSancion, string> = {
-  amarillas: "Acumulación de amarillas: 1 fecha",
-  doble_amarilla: "Doble amarilla: 1 fecha",
-  roja_directa: "Roja directa: la comisión define las fechas",
-};
+export function textoMotivo(s: Pick<Sancion, "motivo" | "fechas" | "aDefinir">): string {
+  const fechas = `${s.fechas} ${s.fechas === 1 ? "fecha" : "fechas"}`;
+  switch (s.motivo) {
+    case "amarillas":
+      return `Acumulación de amarillas: ${fechas}`;
+    case "doble_amarilla":
+      return `Doble amarilla: ${fechas}`;
+    case "roja_directa":
+      return s.aDefinir ? "Roja directa: fechas a definir por la comisión" : `Roja directa: ${fechas}`;
+  }
+}
 
 type PartidoOrdenado = Pick<Partido, "id" | "fase" | "estado" | "localId" | "visitanteId">;
 
@@ -28,7 +39,7 @@ type PartidoOrdenado = Pick<Partido, "id" | "fase" | "estado" | "localId" | "vis
  * Sanciones según el reglamento, a partir de las tarjetas de Eventos:
  * - N amarillas acumuladas (3) → 1 fecha. Se limpian al llegar a la fase configurada (semis).
  * - Doble amarilla en un partido (dos amarillas, o amarilla + roja) → 1 fecha.
- * - Roja directa → al menos el próximo partido; las fechas las define la comisión.
+ * - Roja directa → las fechas que cargue la comisión en la fila de la roja (si no, 1 "a definir").
  * `partidos` tiene que venir en orden cronológico y con los equipos resueltos.
  */
 export function calcularSanciones(
@@ -57,35 +68,44 @@ export function calcularSanciones(
         limpio = true;
       }
       const tarjetas = (tarjetasPorPartido.get(partido.id) ?? []).filter((e) => e.equipoId === equipoId);
-      const porJugador = new Map<string, { amarillas: number; rojas: number }>();
+      const porJugador = new Map<string, { amarillas: number; rojas: number; fechasRoja: number | null }>();
       for (const t of tarjetas) {
-        const c = porJugador.get(t.jugadorId!) ?? { amarillas: 0, rojas: 0 };
+        const c = porJugador.get(t.jugadorId!) ?? { amarillas: 0, rojas: 0, fechasRoja: null };
         if (t.tipo === "amarilla") c.amarillas++;
-        else c.rojas++;
+        else {
+          c.rojas++;
+          c.fechasRoja = t.fechasSancion ?? c.fechasRoja;
+        }
         porJugador.set(t.jugadorId!, c);
       }
 
-      const siguiente = delEquipo[i + 1] ?? null;
-      const sancionar = (jugadorId: string, motivo: MotivoSancion) =>
+      const sancionar = (jugadorId: string, motivo: MotivoSancion, fechas: number, aDefinir = false) => {
+        const suspension = delEquipo.slice(i + 1, i + 1 + fechas);
+        const jugados = suspension.filter((p) => p.estado === "finalizado").length;
         sanciones.push({
           jugadorId,
           equipoId,
           motivo,
+          fechas,
+          aDefinir,
           partidoId: partido.id,
-          cumpleEnPartidoId: siguiente?.id ?? null,
-          cumplida: siguiente?.estado === "finalizado",
+          cumpleEnPartidoId: suspension.find((p) => p.estado !== "finalizado")?.id ?? null,
+          fechasCumplidas: jugados,
+          cumplida: jugados >= fechas,
         });
+      };
 
-      for (const [jugadorId, { amarillas, rojas }] of porJugador) {
+      for (const [jugadorId, { amarillas, rojas, fechasRoja }] of porJugador) {
         if (amarillas >= 2 || (amarillas >= 1 && rojas >= 1)) {
           // Las amarillas de una expulsión por doble amarilla no se acumulan.
-          sancionar(jugadorId, "doble_amarilla");
+          sancionar(jugadorId, "doble_amarilla", 1);
         } else if (rojas >= 1) {
-          sancionar(jugadorId, "roja_directa");
+          if (fechasRoja === null) sancionar(jugadorId, "roja_directa", 1, true);
+          else if (fechasRoja > 0) sancionar(jugadorId, "roja_directa", fechasRoja);
         } else if (amarillas === 1) {
           const total = (acumuladas.get(jugadorId) ?? 0) + 1;
           acumuladas.set(jugadorId, total);
-          if (total % reglas.amarillasParaSuspension === 0) sancionar(jugadorId, "amarillas");
+          if (total % reglas.amarillasParaSuspension === 0) sancionar(jugadorId, "amarillas", 1);
         }
       }
     });

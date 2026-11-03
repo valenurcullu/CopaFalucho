@@ -22,7 +22,7 @@ const tarjeta = (equipoId: string, tipo: "amarilla" | "roja") => ({ equipoId, ti
 const orden = (filas: { equipoId: string }[]) => filas.map((f) => f.equipoId);
 
 describe("calcularMarcador", () => {
-  const ev = (tipo: Evento["tipo"], equipoId: string): Evento => ({ id: "x", partidoId: "Z1", tipo, equipoId, jugadorId: null, minuto: 1 });
+  const ev = (tipo: Evento["tipo"], equipoId: string): Evento => ({ id: "x", partidoId: "Z1", tipo, equipoId, jugadorId: null, minuto: 1, fechasSancion: null });
 
   it("cuenta goles por equipo e ignora tarjetas", () => {
     expect(calcularMarcador("A", "B", [ev("gol", "A"), ev("gol", "A"), ev("amarilla", "B"), ev("gol", "B")])).toEqual({ local: 2, visitante: 1 });

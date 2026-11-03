@@ -5,7 +5,7 @@ import { EsqueletoLista, TituloPagina } from "@/components/ui/basicos";
 import { torneoConfig } from "@/config/torneo";
 import { obtenerTorneo } from "@/lib/torneo";
 import { formatearDiaCorto, nombreJugador } from "@/lib/formato";
-import { TEXTO_MOTIVO } from "@/lib/torneo/sanciones";
+import { textoMotivo } from "@/lib/torneo/sanciones";
 import { indices } from "@/lib/torneo/vista";
 
 export const metadata: Metadata = { title: "Estadísticas" };
@@ -37,7 +37,7 @@ async function EstadisticasConDatos() {
           jugadorId: s.jugadorId,
           nombre: j ? nombreJugador(j) : s.jugadorId,
           equipo: equipos.get(s.equipoId)?.nombre ?? "",
-          motivo: TEXTO_MOTIVO[s.motivo],
+          motivo: textoMotivo(s),
           cumpleEn: partido ? `${rival ? `vs. ${rival}` : partido.nombreLlave ?? "el próximo partido"} · ${formatearDiaCorto(partido.fecha)}` : null,
           cumplida: s.cumplida,
         };

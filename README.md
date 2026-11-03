@@ -190,7 +190,7 @@ Se recortan cuadradas, se optimizan y se guardan en `public/equipos/`. Después:
 
 ### Reglas que la app aplica sola
 
-- **Sanciones** (pestaña Stats → Sanciones y página de cada equipo): 3 amarillas o una doble amarilla (dos amarillas, o amarilla y roja, en el mismo partido) = 1 fecha; las amarillas se limpian en semis. La roja directa figura como suspensión para el próximo partido y la comisión define cuántas fechas.
+- **Sanciones** (pestaña Stats → Sanciones y página de cada equipo): 3 amarillas o una doble amarilla (dos amarillas, o amarilla y roja, en el mismo partido) = 1 fecha; las amarillas se limpian en semis. En la roja directa, la comisión define las fechas: cargalas en la columna `fechas_sancion` de la fila de la roja en Eventos (si queda vacía, figura como 1 fecha "a definir").
 - **Descuento de puntos**: en la hoja Equipos, `puntos_descontados` (por ejemplo `3` al equipo que no mandó árbitro). Se resta en la tabla y se muestra al lado del equipo.
 - **Listas**: avisa en `/admin/chequeo` si un jugador aparece en dos equipos o si un combinado tiene más de 20 jugadores.
 - El texto del reglamento que se ve en la app está en [src/config/reglamento.ts](src/config/reglamento.ts).

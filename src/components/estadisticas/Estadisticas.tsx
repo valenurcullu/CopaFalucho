@@ -113,7 +113,7 @@ function ListaSanciones({ filas, conFichas }: { filas: FilaSancion[]; conFichas:
         </section>
       )}
       <p className="text-xs text-texto-suave">
-        Según el reglamento: 3 amarillas o doble amarilla, 1 fecha (las amarillas se limpian en semis). La roja directa la define la comisión.
+        Según el reglamento: 3 amarillas o doble amarilla, 1 fecha (las amarillas se limpian en semis). En la roja directa, las fechas las define la comisión.
       </p>
     </div>
   );

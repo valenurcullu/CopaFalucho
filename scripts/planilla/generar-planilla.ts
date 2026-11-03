@@ -14,7 +14,7 @@ const CARPETA = path.join(process.cwd(), "data");
 const HOJAS = ["Equipos", "Partidos", "Eventos", "Jugadores"] as const;
 
 /** Columnas que se guardan como número; el resto va como texto plano. */
-const NUMERICAS = new Set(["año", "ranking_anterior", "puntos_descontados", "fecha_nro", "goles_local", "goles_visitante", "penales_local", "penales_visitante", "minuto", "número", "peso_kg", "altura_cm"]);
+const NUMERICAS = new Set(["fechas_sancion", "año", "ranking_anterior", "puntos_descontados", "fecha_nro", "goles_local", "goles_visitante", "penales_local", "penales_visitante", "minuto", "número", "peso_kg", "altura_cm"]);
 
 /** Listas desplegables para que no se carguen valores inválidos. */
 const OPCIONES: Record<string, string[]> = {
@@ -35,6 +35,7 @@ const INSTRUCCIONES = [
   ["Si una llave termina empatada, cargá penales_local y penales_visitante."],
   ["árbitro: un nombre, o la clase que arbitra (\"2000\")."],
   ["Eventos (opcional pero recomendado): una fila por gol o tarjeta. jugador = id, nombre, apellido o apodo (\"coke\"). Si no está en Jugadores, se agrega solo."],
+  ["Eventos: en una roja directa, cargá en fechas_sancion las fechas que defina la comisión. Si queda vacío, figura como 1 fecha a definir."],
   ["Jugadores: id = equipo-número de orden (2001-07). apodo, foto_url, peso y altura son opcionales."],
   ["Fechas en formato dd/mm/aaaa y horas en hh:mm."],
 ];

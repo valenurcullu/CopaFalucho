@@ -72,6 +72,8 @@ export interface Evento {
   equipoId: string;
   jugadorId: string | null;
   minuto: number | null;
+  /** Solo en rojas: fechas de suspensión que definió la comisión. */
+  fechasSancion: number | null;
 }
 
 export interface Jugador {

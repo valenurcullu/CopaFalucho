@@ -300,6 +300,7 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
       equipoId,
       jugadorId,
       minuto: fila.minuto,
+      fechasSancion: fila.tipo === "roja" ? fila.fechas_sancion : null,
     });
   }
 
