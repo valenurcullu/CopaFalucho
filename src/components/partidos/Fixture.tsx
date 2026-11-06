@@ -6,7 +6,7 @@ import type { Equipo } from "@/domain/tipos";
 import { useAhora } from "@/hooks/useAhora";
 import { formatearDia, formatearDiaCorto, hoyEnBuenosAires } from "@/lib/formato";
 import { partidosEnCancha, proximoTurno, seEstaJugando, type Duracion } from "@/lib/horario";
-import type { PartidoTarjeta } from "@/lib/torneo/vista";
+import { libresDelDia, type PartidoTarjeta } from "@/lib/torneo/vista";
 import { TarjetaPartido } from "./TarjetaPartido";
 
 const FASE_FINAL = "final";
@@ -31,6 +31,15 @@ function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => v
     >
       {children}
     </button>
+  );
+}
+
+function Libres({ libres }: { libres: { equipo: Equipo; zona: string }[] }) {
+  if (libres.length === 0) return null;
+  return (
+    <p className="mb-2 text-sm text-texto-suave">
+      <span className="font-semibold">Fecha libre:</span> {libres.map((l) => `${l.equipo.nombre} (Zona ${l.zona})`).join(" · ")}
+    </p>
   );
 }
 
@@ -147,6 +156,13 @@ export function Fixture({ partidos, equipos, zonas, conFichas, duracion }: Props
           <h2 id={`titulo-${fecha}`} className="mb-2 font-titulos text-lg font-bold uppercase tracking-wide text-secundario">
             {fecha === "sin-fecha" ? "Fecha a confirmar" : formatearDia(fecha)}
           </h2>
+          <Libres
+            libres={libresDelDia(
+              partidos.filter((p) => (p.fecha ?? "sin-fecha") === fecha),
+              partidos,
+              equipos,
+            ).filter((l) => (!zona || zona === FASE_FINAL || l.zona === zona) && (!equipoId || l.equipo.id === equipoId))}
+          />
           <div className="flex flex-col gap-3">
             {lista.map((p) => (
               <TarjetaPartido key={p.id} partido={p} conFichas={conFichas} jugandose={jugandose(p)} />

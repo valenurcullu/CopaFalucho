@@ -10,6 +10,7 @@ import { armarDatos } from "../../src/lib/datos/armar";
 import { escribirCsv, normalizarColumna, type FilaCruda } from "../../src/lib/datos/csv";
 import { COLUMNAS } from "../../src/lib/datos/esquemas";
 import { analizarTorneo } from "../../src/lib/torneo/analizar";
+import { todosContraTodos } from "../../src/lib/torneo/fixture";
 import { crearAzar, type Azar } from "./azar";
 import { APELLIDOS, ARBITROS, NOMBRES } from "./nombres";
 
@@ -18,9 +19,10 @@ const CARPETA = path.join(process.cwd(), "data", "ejemplo");
 const DURACION = 40;
 const CANCHAS = ["Cancha 1", "Cancha 2", "Cancha 3", "Cancha 4"];
 const ZONAS = ["A", "B", "C", "D"];
-/** 15 clases y un equipo de varias generaciones, como pasa en la copa real. */
+/** 19 clases y un equipo de varias generaciones, como pasa en la copa real: 20 equipos, 4 zonas de 5. */
 const EQUIPO_VETERANOS = { id: "8YPICO", nombre: "80 y pico", sigla: "80+", alias: "8 y pico, 80 y pico, 80" };
-const CLASES: (number | typeof EQUIPO_VETERANOS)[] = [EQUIPO_VETERANOS, ...Array.from({ length: 15 }, (_, i) => 1994 + i)];
+const CLASES: (number | typeof EQUIPO_VETERANOS)[] = [EQUIPO_VETERANOS, ...Array.from({ length: 19 }, (_, i) => 1990 + i)];
+const EQUIPOS_POR_ZONA = 5;
 const idDe = (c: (typeof CLASES)[number]) => (typeof c === "number" ? String(c) : c.id);
 const APODOS = ["Coke", "Mapache", "Rata", "Osito", "Pelado", "Laucha", "Tano", "Ruso", "Negro", "Chino", "Colo", "Flaco", "Gordo", "Toto", "Pipa", "Dumbo"];
 
@@ -119,14 +121,8 @@ function contarGoles(eventos: Fila[], localId: string): [number, number] {
   return [local, goles.length - local];
 }
 
-/** Todos contra todos para 4 equipos: 3 fechas de 2 partidos. */
-const ROUND_ROBIN_4: [number, number][][] = [
-  [[0, 1], [2, 3]],
-  [[0, 2], [3, 1]],
-  [[3, 0], [1, 2]],
-];
-
-const FECHAS_ZONA = ["28/11/2026", "29/11/2026", "05/12/2026"];
+/** Una fecha de zona por día; con 5 equipos por zona son 5 fechas. */
+const FECHAS_ZONA = ["28/11/2026", "29/11/2026", "05/12/2026", "06/12/2026", "12/12/2026"];
 
 /** Índices de columnas de la hoja Partidos que se completan al simular. */
 const COL = {
@@ -198,7 +194,7 @@ async function main() {
   const sorteo = azar.mezclar(CLASES.map(idDe));
   const ranking = new Map(azar.mezclar(CLASES.map(idDe)).map((id, i) => [id, i + 1]));
   const zonaDe = new Map<string, string>();
-  sorteo.forEach((id, i) => zonaDe.set(id, ZONAS[Math.floor(i / 4)]));
+  sorteo.forEach((id, i) => zonaDe.set(id, ZONAS[Math.floor(i / EQUIPOS_POR_ZONA)]));
   const equipos: Fila[] = CLASES.map((c) =>
     typeof c === "number"
       ? [String(c), c, zonaDe.get(String(c))!, null, null, null, null, ranking.get(String(c))!, null]
@@ -218,19 +214,17 @@ async function main() {
   const partidos: Fila[] = [];
   const eventos: Fila[] = [];
   let numero = 0;
-  ROUND_ROBIN_4.forEach((cruces, f) => {
+  const fixturePorZona = ZONAS.map((_, z) => todosContraTodos(sorteo.slice(z * EQUIPOS_POR_ZONA, (z + 1) * EQUIPOS_POR_ZONA)));
+  FECHAS_ZONA.forEach((fecha, f) => {
     ZONAS.forEach((zona, z) => {
-      const integrantes = sorteo.slice(z * 4, z * 4 + 4);
-      cruces.forEach(([l, v], c) => {
+      fixturePorZona[z][f].cruces.forEach(([local, visitante], c) => {
         const id = `Z${String(++numero).padStart(2, "0")}`;
-        const local = integrantes[l];
-        const visitante = integrantes[v];
         const hora = z < 2 ? "10:00" : "11:15";
         const cancha = CANCHAS[(z % 2) * 2 + c];
         const delPartido = simularEventos(azar, id, [local, visitante], plantel);
         const [gl, gv] = contarGoles(delPartido, local);
         partidos.push([
-          id, "zona", zona, null, f + 1, FECHAS_ZONA[f], hora, cancha,
+          id, "zona", zona, null, f + 1, fecha, hora, cancha,
           local, visitante, gl, gv, azar.elegir(sorteo.filter((e) => e !== local && e !== visitante)), "finalizado", null, null,
         ]);
         eventos.push(...delPartido);
@@ -240,13 +234,13 @@ async function main() {
 
   // Fase final: los equipos salen solos de las tablas y de las llaves.
   const finales: [string, string, string, string, string][] = [
-    ["CU1", "cuartos", "C1", "06/12/2026", "10:00"],
-    ["CU2", "cuartos", "C2", "06/12/2026", "10:00"],
-    ["CU3", "cuartos", "C3", "06/12/2026", "10:00"],
-    ["CU4", "cuartos", "C4", "06/12/2026", "10:00"],
-    ["SE1", "semis", "S1", "12/12/2026", "10:00"],
-    ["SE2", "semis", "S2", "12/12/2026", "10:00"],
-    ["FIN", "final", "F", "12/12/2026", "12:00"],
+    ["CU1", "cuartos", "C1", "13/12/2026", "10:00"],
+    ["CU2", "cuartos", "C2", "13/12/2026", "10:00"],
+    ["CU3", "cuartos", "C3", "13/12/2026", "10:00"],
+    ["CU4", "cuartos", "C4", "13/12/2026", "10:00"],
+    ["SE1", "semis", "S1", "19/12/2026", "10:00"],
+    ["SE2", "semis", "S2", "19/12/2026", "10:00"],
+    ["FIN", "final", "F", "19/12/2026", "12:00"],
   ];
   finales.forEach(([id, fase, llave, fecha, hora], i) => {
     const cancha = fase === "cuartos" ? CANCHAS[i] : fase === "semis" ? CANCHAS[i - 4] : CANCHAS[0];

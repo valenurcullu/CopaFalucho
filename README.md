@@ -93,6 +93,8 @@ Reglas que conviene respetar:
 
    Con el formato de 2 por zona, los dos equipos de una misma zona solo se pueden volver a cruzar en la final.
 
+   Las zonas pueden tener cualquier cantidad de equipos. El formato 2026 es de 20 equipos en 4 zonas de 5: todos contra todos son 5 fechas de 2 partidos por zona, y en cada fecha un equipo queda libre (la app lo muestra en el fixture y en la página del equipo). Pasan los 2 primeros de cada zona: 8 equipos a cuartos por tabla general.
+
    Si querés un cuadro distinto (por ejemplo, con mejores terceros), en `formato.llaves` se puede pasar la lista de llaves a mano en vez de `"auto"`; el tipo `LlaveConfig` en [src/domain/config.ts](src/domain/config.ts) explica cada campo. Si el formato no cierra, la app lo avisa arriba del fixture.
 4. Si cambiaste de planilla, actualizá `GOOGLE_SHEET_ID` en Vercel (sección 3) y volvé a desplegar.
 

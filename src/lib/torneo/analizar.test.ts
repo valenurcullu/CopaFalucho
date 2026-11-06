@@ -153,3 +153,40 @@ describe("estadísticas", () => {
     ]);
   });
 });
+
+describe("formato 2026: 20 equipos, 4 zonas de 5", () => {
+  it("cada zona juega 10 partidos, pasan 2 y la tabla general arma cuartos 1º-8º, 4º-5º, 2º-7º, 3º-6º", () => {
+    const zonas = ["A", "B", "C", "D"];
+    const equipos = zonas.flatMap((z, i) => Array.from({ length: 5 }, (_, j) => equipo(String(2000 + i * 5 + j), z)));
+    const partidos: Partido[] = [];
+    const eventos: Evento[] = [];
+    let n = 0;
+    for (const z of zonas) {
+      const ids = equipos.filter((e) => e.zona === z).map((e) => e.id);
+      // El de índice menor gana siempre: la tabla queda en orden de id.
+      for (let a = 0; a < ids.length; a++)
+        for (let b = a + 1; b < ids.length; b++) {
+          const id = `Z${++n}`;
+          partidos.push(partido(id, { zona: z, localId: ids[a], visitanteId: ids[b] }));
+          eventos.push(...goles(id, ids[a], 1 + zonas.indexOf(z)));
+        }
+    }
+    for (const llave of ["C1", "C2", "C3", "C4"]) partidos.push(partido(`P-${llave}`, { fase: "cuartos", llave, estado: "programado" }));
+    const datos: DatosTorneo = { equipos, jugadores: [], partidos, eventos, avisos: [], origen: "ejemplo", actualizadoEn: "2026-12-01T00:00:00Z" };
+    const t = analizarTorneo(datos, { ...config, formato: { ...config.formato, cruces: "general" } });
+
+    expect(t.zonas.map((z) => z.tabla.length)).toEqual([5, 5, 5, 5]);
+    expect(t.zonas.every((z) => z.completa && z.tabla.every((f) => f.pj === 4))).toBe(true);
+    expect(t.general).toHaveLength(8);
+    // Los primeros de zona tienen 12 pts; en cada zona se gana por un gol más (A por 1, D por 4).
+    expect(t.general.slice(0, 4).map((f) => f.zona)).toEqual(["D", "C", "B", "A"]);
+    const cuartos = t.partidos.filter((p) => p.fase === "cuartos").map((p) => [p.llave, p.localId, p.visitanteId]);
+    const g = t.general.map((f) => f.equipoId);
+    expect(cuartos).toEqual([
+      ["C1", g[0], g[7]],
+      ["C2", g[3], g[4]],
+      ["C3", g[1], g[6]],
+      ["C4", g[2], g[5]],
+    ]);
+  });
+});

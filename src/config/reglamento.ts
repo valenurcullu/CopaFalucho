@@ -18,7 +18,7 @@ export const reglamento: SeccionReglamento[] = [
   {
     titulo: "Formato",
     parrafos: [
-      "16 equipos divididos en 4 zonas de 4. Pasan de ronda los dos primeros de cada zona. No hay descenso.",
+      "20 equipos divididos en 4 zonas de 5, todos contra todos a una rueda (en cada fecha un equipo de cada zona queda libre). Pasan de ronda los dos primeros de cada zona. No hay descenso.",
       "Los partidos duran 40 minutos, en 2 tiempos de 20, con 5 minutos de descanso.",
       "Se juega con 8 jugadores en cancha, arquero incluido. Para empezar o seguir un partido hacen falta al menos 5; con 4 en cancha se pierden los puntos. Los cambios son ilimitados y un jugador que salió puede volver a entrar.",
     ],

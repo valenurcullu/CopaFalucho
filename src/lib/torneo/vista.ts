@@ -77,3 +77,28 @@ export function indices(torneo: { equipos: Equipo[]; jugadores: Jugador[] }) {
     jugadores: new Map(torneo.jugadores.map((j) => [j.id, j])),
   };
 }
+
+/**
+ * Equipos con fecha libre en un día: en cada zona y fecha_nro que se juega ese
+ * día, los de la zona que no tienen partido (zonas con cantidad impar).
+ */
+export function libresDelDia(
+  partidosDelDia: readonly Pick<PartidoTarjeta, "fase" | "zona" | "fechaNro">[],
+  todos: readonly Pick<PartidoTarjeta, "fase" | "zona" | "fechaNro" | "local" | "visitante">[],
+  equipos: readonly Equipo[],
+): { equipo: Equipo; zona: string }[] {
+  const fechas = new Set(
+    partidosDelDia.filter((p) => p.fase === "zona" && p.zona && p.fechaNro !== null).map((p) => `${p.zona}|${p.fechaNro}`),
+  );
+  const libres: { equipo: Equipo; zona: string }[] = [];
+  for (const clave of [...fechas].sort()) {
+    const [zona, fechaNro] = clave.split("|");
+    const juegan = new Set(
+      todos
+        .filter((p) => p.fase === "zona" && p.zona === zona && String(p.fechaNro) === fechaNro)
+        .flatMap((p) => [p.local?.id, p.visitante?.id]),
+    );
+    for (const e of equipos) if (e.zona === zona && !juegan.has(e.id)) libres.push({ equipo: e, zona });
+  }
+  return libres;
+}

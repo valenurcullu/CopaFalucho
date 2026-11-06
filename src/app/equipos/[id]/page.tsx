@@ -49,6 +49,13 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
     .sort((a, b) => ordenPosicion(a.posicion) - ordenPosicion(b.posicion) || (a.numero ?? 999) - (b.numero ?? 999));
   const { mostrarFichas } = torneoConfig.jugadores;
   const suspendidos = torneo.sanciones.filter((s) => s.equipoId === id && !s.cumplida);
+  // Zonas impares: fechas de la zona en las que este equipo no juega.
+  const fechasDeZona = new Map<number, string | null>();
+  for (const p of torneo.partidos) {
+    if (p.fase === "zona" && p.zona === equipo.zona && p.fechaNro !== null && !fechasDeZona.has(p.fechaNro)) fechasDeZona.set(p.fechaNro, p.fecha);
+  }
+  const fechasQueJuega = new Set(partidos.filter((p) => p.fase === "zona").map((p) => p.fechaNro));
+  const fechasLibres = [...fechasDeZona].filter(([n]) => !fechasQueJuega.has(n)).sort(([a], [b]) => a - b);
 
   return (
     <>
@@ -99,6 +106,12 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
       )}
 
       <TituloSeccion>Partidos</TituloSeccion>
+      {fechasLibres.length > 0 && (
+        <p className="mb-3 text-sm text-texto-suave">
+          <span className="font-semibold">Fecha libre:</span>{" "}
+          {fechasLibres.map(([n, fecha]) => `Fecha ${n}${fecha ? ` (${formatearDiaCorto(fecha)})` : ""}`).join(" · ")}
+        </p>
+      )}
       {partidos.length === 0 ? (
         <Vacio>Todavía no tiene partidos cargados.</Vacio>
       ) : (

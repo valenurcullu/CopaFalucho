@@ -9,7 +9,7 @@ export const torneoConfig: TorneoConfig = {
   edicion: 2026,
   puntos: { victoria: 3, empate: 1, derrota: 0 },
   desempate: ["enfrentamiento_directo", "diferencia_gol", "goles_a_favor", "goles_en_contra", "ranking_anterior"],
-  desempateGeneral: ["diferencia_gol", "goles_a_favor", "goles_en_contra", "fair_play"],
+  desempateGeneral: ["diferencia_gol", "goles_a_favor", "goles_en_contra", "fair_play", "ranking_anterior"],
   fairPlay: { amarilla: 1, roja: 3 },
   formato: {
     clasificadosPorZona: 2,

@@ -28,7 +28,7 @@ describe("datos de ejemplo", () => {
       opciones,
     );
     expect(datos.avisos).toEqual([]);
-    expect(datos.equipos).toHaveLength(16);
+    expect(datos.equipos).toHaveLength(20);
     // Las respuestas del formulario de ejemplo crean un jugador nuevo y completan otro.
     expect(datos.jugadores.find((j) => j.id === "2001-TOMASITURRALDE")).toMatchObject({ apodo: "Toto", equipoId: "2001" });
     expect(datos.equipos.find((e) => e.id === "2001")!.nombre).toBe("Clase 2001");
