@@ -64,19 +64,45 @@ export function leerEjemplo(): Promise<HojasCrudas> {
  * El endpoint gviz devuelve el estado actual de la planilla, sin la demora
  * de varios minutos que tiene "Publicar en la Web".
  */
+/** Última versión buena de cada hoja, para no cortar la app si Google tarda o falla. */
+const ultimaLectura = new Map<string, string>();
+
+const ESPERA_MS = 8_000;
+const INTENTOS = 2;
+
+async function pedirHoja(url: string, hoja: string, revalidarSegundos: number): Promise<string> {
+  const respuesta = await fetch(url, { next: { revalidate: revalidarSegundos }, signal: AbortSignal.timeout(ESPERA_MS) });
+  if (!respuesta.ok) {
+    throw new Error(`No se pudo leer la hoja "${hoja}" (HTTP ${respuesta.status}). ¿Está compartida con el link?`);
+  }
+  const tipo = respuesta.headers.get("content-type") ?? "";
+  if (tipo.includes("text/html")) {
+    throw new Error(`Google devolvió una página en vez de la hoja "${hoja}". Revisá que la planilla esté compartida con el link.`);
+  }
+  return respuesta.text();
+}
+
 export function leerPlanilla(idPlanilla: string, revalidarSegundos: number): Promise<HojasCrudas> {
   return leerHojas(async (hoja) => {
     const url =
       `https://docs.google.com/spreadsheets/d/${encodeURIComponent(idPlanilla)}` +
       `/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(hoja)}`;
-    const respuesta = await fetch(url, { next: { revalidate: revalidarSegundos }, signal: AbortSignal.timeout(10_000) });
-    if (!respuesta.ok) {
-      throw new Error(`No se pudo leer la hoja "${hoja}" (HTTP ${respuesta.status}). ¿Está compartida con el link?`);
+    let ultimoError: unknown;
+    for (let intento = 1; intento <= INTENTOS; intento++) {
+      try {
+        const texto = await pedirHoja(url, hoja, revalidarSegundos);
+        ultimaLectura.set(url, texto);
+        return texto;
+      } catch (error) {
+        ultimoError = error;
+      }
     }
-    const tipo = respuesta.headers.get("content-type") ?? "";
-    if (tipo.includes("text/html")) {
-      throw new Error(`Google devolvió una página en vez de la hoja "${hoja}". Revisá que la planilla esté compartida con el link.`);
+    // Google tardó o falló dos veces: se sigue con lo último que se leyó bien.
+    const anterior = ultimaLectura.get(url);
+    if (anterior !== undefined) {
+      console.warn(`No se pudo leer la hoja "${hoja}" (${(ultimoError as Error).message}); se usa la última versión leída.`);
+      return anterior;
     }
-    return respuesta.text();
+    throw ultimoError;
   });
 }
