@@ -151,10 +151,11 @@ function compartirFotosSubidas() {
   var hoja = SpreadsheetApp.getActive().getSheetByName(HOJA_RESPUESTAS);
   if (!hoja) throw new Error('No existe la hoja "' + HOJA_RESPUESTAS + '"');
   var valores = hoja.getDataRange().getDisplayValues();
-  var col = valores[0].map(function (c) {
-    return c.toString().trim().toLowerCase();
-  }).indexOf("foto");
-  if (col === -1) throw new Error('No hay columna "Foto": agregá la pregunta de subir archivo al formulario');
+  var col = -1;
+  valores[0].forEach(function (c, i) {
+    if (col === -1 && c.toString().toLowerCase().indexOf("foto") !== -1) col = i;
+  });
+  if (col === -1) throw new Error("No hay ninguna columna con la palabra foto: agregá la pregunta de subir archivo al formulario");
   var cantidad = 0;
   for (var i = 1; i < valores.length; i++) {
     var m = /[?&]id=([\w-]+)/.exec(valores[i][col]);

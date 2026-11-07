@@ -279,7 +279,7 @@ describe("formulario de jugadores", () => {
       id: "2001-JUANCRUZPEREZ", equipoId: "2001", nombre: "Juan Cruz Pérez", apodo: "Coke", posicion: "Delantero",
       pesoKg: 82.5, alturaCm: 181, fotoDriveId: "1AbCdEfGhIjKlMnOp",
     });
-    expect(datos.jugadores[0].fotoUrl).toContain("drive.google.com/thumbnail?id=1AbCdEfGhIjKlMnOp");
+    expect(datos.jugadores[0].fotoUrl).toBe("https://lh3.googleusercontent.com/d/1AbCdEfGhIjKlMnOp=w1200");
   });
 
   it("si respondió dos veces vale la última, y completa a un jugador que ya estaba", () => {
@@ -296,6 +296,16 @@ describe("formulario de jugadores", () => {
     );
     expect(datos.jugadores).toHaveLength(1);
     expect(datos.jugadores[0]).toMatchObject({ id: "8YPICO-01", numero: 1, pesoKg: 96 });
+  });
+
+  it("reconoce la pregunta de la foto aunque no se llame exactamente Foto", () => {
+    const fila: FilaCruda = {
+      ...respuesta({ nombre: "Valentin", apellido: "Urcullu", categoria: "Clase 2001" }),
+      "agregar_foto_de_perfil_(con_camiseta_puesta)": "https://drive.google.com/open?id=1y6yYAZgWnfaNjuJiYZ4zWc",
+    };
+    delete fila.foto_url;
+    const datos = armarDatos(hojas({ Equipos: equipos, Formulario: [fila] }), opciones);
+    expect(datos.jugadores[0].fotoDriveId).toBe("1y6yYAZgWnfaNjuJiYZ4zWc");
   });
 
   it("no publica a quien no autorizó ni a los ocultados, y avisa categorías inexistentes", () => {

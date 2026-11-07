@@ -34,7 +34,8 @@ export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAl
   if (jugador.posicion) datos.push(["Posición", jugador.posicion]);
   if (mostrarPesoAltura && jugador.alturaCm) datos.push(["Altura", `${(jugador.alturaCm / 100).toFixed(2).replace(".", ",")} m`]);
   if (mostrarPesoAltura && jugador.pesoKg) datos.push(["Peso", `${String(jugador.pesoKg).replace(".", ",")} kg`]);
-  const columnas = ["grid-cols-1", "grid-cols-1", "grid-cols-2", "grid-cols-3", "grid-cols-4"][datos.length];
+  // Con 4 datos van de a 2 por fila, así entran posiciones largas como "Mediocampista".
+  const columnas = ["grid-cols-1", "grid-cols-1", "grid-cols-2", "grid-cols-3", "grid-cols-2"][datos.length];
 
   return (
     <article

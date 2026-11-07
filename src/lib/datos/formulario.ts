@@ -46,11 +46,16 @@ type Pregunta = keyof typeof PREGUNTAS;
 
 const clave = (s: string) => sinAcentos(s).toLowerCase().trim();
 
+/** Preguntas que se reconocen si la palabra aparece en cualquier parte del título ("Agregar foto de perfil"). */
+const EN_CUALQUIER_PARTE: readonly Pregunta[] = ["foto"];
+
 /** Columna de la planilla que corresponde a cada pregunta, según cómo empieza su título. */
 function columnasDe(encabezados: readonly string[]): Partial<Record<Pregunta, string>> {
   const resultado: Partial<Record<Pregunta, string>> = {};
   for (const [pregunta, prefijos] of Object.entries(PREGUNTAS) as [Pregunta, readonly string[]][]) {
-    const columna = encabezados.find((e) => prefijos.some((p) => clave(e).startsWith(p)));
+    const coincide = (e: string) =>
+      prefijos.some((p) => (EN_CUALQUIER_PARTE.includes(pregunta) ? clave(e).includes(p) : clave(e).startsWith(p)));
+    const columna = encabezados.find(coincide);
     if (columna) resultado[pregunta] = columna;
   }
   return resultado;
@@ -69,7 +74,7 @@ export function idDeDrive(link: string): string | null {
 }
 
 /** Link de una imagen de Drive que se puede mostrar en la web (el archivo tiene que ser público). */
-export const urlImagenDrive = (id: string, ancho = 800) => `https://drive.google.com/thumbnail?id=${id}&sz=w${ancho}`;
+export const urlImagenDrive = (id: string, ancho = 1200) => `https://lh3.googleusercontent.com/d/${id}=w${ancho}`;
 
 function numero(texto: string | undefined, min: number, max: number): number | null {
   if (!texto) return null;
