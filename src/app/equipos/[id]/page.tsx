@@ -5,7 +5,8 @@ import { Suspense } from "react";
 import { FotoJugador } from "@/components/jugadores/FotoJugador";
 import { Volver } from "@/components/layout/Volver";
 import { TarjetaPartido } from "@/components/partidos/TarjetaPartido";
-import { Esqueleto, EsqueletoLista, Tarjeta, TituloSeccion, Vacio } from "@/components/ui/basicos";
+import { Esqueleto, EsqueletoLista, Tarjeta, Vacio } from "@/components/ui/basicos";
+import { Pestanias } from "@/components/ui/Pestanias";
 import { EscudoClase } from "@/components/ui/EscudoClase";
 import { IconoFlecha, IconoPelota } from "@/components/ui/iconos";
 import { Racha } from "@/components/ui/Racha";
@@ -105,67 +106,87 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
         </div>
       )}
 
-      <TituloSeccion>Partidos</TituloSeccion>
-      {fechasLibres.length > 0 && (
-        <p className="mb-3 text-sm text-texto-suave">
-          <span className="font-semibold">Fecha libre:</span>{" "}
-          {fechasLibres.map(([n, fecha]) => `Fecha ${n}${fecha ? ` (${formatearDiaCorto(fecha)})` : ""}`).join(" · ")}
-        </p>
-      )}
-      {partidos.length === 0 ? (
-        <Vacio>Todavía no tiene partidos cargados.</Vacio>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {partidos.map((p) => (
-            <TarjetaPartido key={p.id} partido={aTarjeta(p, equipos, jugadores)} conFichas={mostrarFichas} mostrarFecha={formatearDiaCorto(p.fecha)} />
-          ))}
-        </div>
-      )}
-
-      <TituloSeccion extra={<span className="text-sm text-texto-suave">{plantel.length} jugadores</span>}>Plantel</TituloSeccion>
-      {plantel.length === 0 ? (
-        <Vacio>Todavía no hay jugadores cargados.</Vacio>
-      ) : (
-        <Tarjeta>
-          <ul>
-            {plantel.map((j) => {
-              const stats = torneo.estadisticasJugadores[j.id];
-              const contenido = (
+      <div className="mt-6">
+        <Pestanias
+          etiqueta="Partidos y jugadores del equipo"
+          pestanias={[
+            {
+              id: "partidos",
+              titulo: `Partidos (${partidos.length})`,
+              contenido: (
                 <>
-                  {j.numero !== null ? (
-                    <span className="w-8 shrink-0 text-center font-titulos text-xl font-bold text-enlace">{j.numero}</span>
-                  ) : (
-                    <span className="relative size-9 shrink-0 overflow-hidden rounded-full bg-figurita-fondo">
-                      <FotoJugador src={j.fotoUrl} nombre={j.nombre} tamanios="36px" />
-                    </span>
+                  {fechasLibres.length > 0 && (
+                    <p className="mb-3 text-sm text-texto-suave">
+                      <span className="font-semibold">Fecha libre:</span>{" "}
+                      {fechasLibres.map(([n, fecha]) => `Fecha ${n}${fecha ? ` (${formatearDiaCorto(fecha)})` : ""}`).join(" · ")}
+                    </p>
                   )}
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold">{nombreJugador(j)}</span>
-                    {j.posicion && <span className="block text-xs text-texto-suave">{j.posicion}</span>}
-                  </span>
-                  {stats?.goles ? (
-                    <span className="flex items-center gap-1 text-sm font-semibold tabular-nums" aria-label={`${stats.goles} goles`}>
-                      {stats.goles} <IconoPelota />
-                    </span>
-                  ) : null}
-                  {mostrarFichas && <IconoFlecha className="size-4 text-texto-suave" />}
+                  {partidos.length === 0 ? (
+                    <Vacio>Todavía no tiene partidos cargados.</Vacio>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {partidos.map((p) => (
+                        <TarjetaPartido key={p.id} partido={aTarjeta(p, equipos, jugadores)} conFichas={mostrarFichas} mostrarFecha={formatearDiaCorto(p.fecha)} />
+                      ))}
+                    </div>
+                  )}
                 </>
-              );
-              return (
-                <li key={j.id} className="border-b border-borde last:border-0">
-                  {mostrarFichas ? (
-                    <Link href={`/jugadores/${j.id}`} prefetch={false} className="flex min-h-14 items-center gap-3 px-3 active:bg-superficie-alt">
-                      {contenido}
-                    </Link>
+              ),
+            },
+            {
+              id: "jugadores",
+              titulo: `Jugadores (${plantel.length})`,
+              contenido: (
+                <>
+                  {plantel.length === 0 ? (
+                    <Vacio>Todavía no hay jugadores cargados.</Vacio>
                   ) : (
-                    <div className="flex min-h-14 items-center gap-3 px-3">{contenido}</div>
+                    <Tarjeta>
+                      <ul>
+                        {plantel.map((j) => {
+                          const stats = torneo.estadisticasJugadores[j.id];
+                          const contenido = (
+                            <>
+                              {j.numero !== null ? (
+                                <span className="w-8 shrink-0 text-center font-titulos text-xl font-bold text-enlace">{j.numero}</span>
+                              ) : (
+                                <span className="relative size-9 shrink-0 overflow-hidden rounded-full bg-figurita-fondo">
+                                  <FotoJugador src={j.fotoUrl} nombre={j.nombre} tamanios="36px" />
+                                </span>
+                              )}
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate font-semibold">{nombreJugador(j)}</span>
+                                {j.posicion && <span className="block text-xs text-texto-suave">{j.posicion}</span>}
+                              </span>
+                              {stats?.goles ? (
+                                <span className="flex items-center gap-1 text-sm font-semibold tabular-nums" aria-label={`${stats.goles} goles`}>
+                                  {stats.goles} <IconoPelota />
+                                </span>
+                              ) : null}
+                              {mostrarFichas && <IconoFlecha className="size-4 text-texto-suave" />}
+                            </>
+                          );
+                          return (
+                            <li key={j.id} className="border-b border-borde last:border-0">
+                              {mostrarFichas ? (
+                                <Link href={`/jugadores/${j.id}`} prefetch={false} className="flex min-h-14 items-center gap-3 px-3 active:bg-superficie-alt">
+                                  {contenido}
+                                </Link>
+                              ) : (
+                                <div className="flex min-h-14 items-center gap-3 px-3">{contenido}</div>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </Tarjeta>
                   )}
-                </li>
-              );
-            })}
-          </ul>
-        </Tarjeta>
-      )}
+                </>
+              ),
+            },
+          ]}
+        />
+      </div>
     </>
   );
 }
