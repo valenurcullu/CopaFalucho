@@ -8,6 +8,7 @@ import { Esqueleto } from "@/components/ui/basicos";
 import { marca } from "@/config/marca";
 import { torneoConfig } from "@/config/torneo";
 import { obtenerTorneo } from "@/lib/torneo";
+import { ESTADISTICAS_EQUIPO_VACIAS } from "@/lib/torneo/estadisticas";
 import { indices } from "@/lib/torneo/vista";
 
 export async function generateStaticParams() {
@@ -38,6 +39,7 @@ async function Ficha({ params }: { params: PageProps<"/jugadores/[id]">["params"
         jugador={jugador}
         equipo={equipos.get(jugador.equipoId) ?? null}
         estadisticas={torneo.estadisticasJugadores[jugador.id] ?? { goles: 0, amarillas: 0, rojas: 0 }}
+        estadisticasEquipo={torneo.estadisticasEquipos[jugador.equipoId] ?? ESTADISTICAS_EQUIPO_VACIAS}
         edicion={torneoConfig.edicion}
         mostrarPesoAltura={torneoConfig.jugadores.mostrarPesoAltura}
       />

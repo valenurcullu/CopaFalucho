@@ -5,14 +5,15 @@ import { Suspense } from "react";
 import { FotoJugador } from "@/components/jugadores/FotoJugador";
 import { Volver } from "@/components/layout/Volver";
 import { TarjetaPartido } from "@/components/partidos/TarjetaPartido";
-import { Esqueleto, EsqueletoLista, Tarjeta, Vacio } from "@/components/ui/basicos";
+import { Esqueleto, EsqueletoLista, Tarjeta as Caja, Vacio } from "@/components/ui/basicos";
 import { Pestanias } from "@/components/ui/Pestanias";
 import { EscudoClase } from "@/components/ui/EscudoClase";
-import { IconoFlecha, IconoPelota } from "@/components/ui/iconos";
+import { IconoFlecha, IconoPelota, Tarjeta } from "@/components/ui/iconos";
 import { Racha } from "@/components/ui/Racha";
 import { torneoConfig } from "@/config/torneo";
 import { formatearDiaCorto, nombreJugador } from "@/lib/formato";
 import { obtenerTorneo } from "@/lib/torneo";
+import { ESTADISTICAS_EQUIPO_VACIAS } from "@/lib/torneo/estadisticas";
 import { textoMotivo } from "@/lib/torneo/sanciones";
 import { aTarjeta, indices } from "@/lib/torneo/vista";
 
@@ -49,6 +50,7 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
     .filter((j) => j.equipoId === id)
     .sort((a, b) => ordenPosicion(a.posicion) - ordenPosicion(b.posicion) || (a.numero ?? 999) - (b.numero ?? 999));
   const { mostrarFichas } = torneoConfig.jugadores;
+  const numeros = torneo.estadisticasEquipos[id] ?? ESTADISTICAS_EQUIPO_VACIAS;
   const suspendidos = torneo.sanciones.filter((s) => s.equipoId === id && !s.cumplida);
   // Zonas impares: fechas de la zona en las que este equipo no juega.
   const fechasDeZona = new Map<number, string | null>();
@@ -60,7 +62,7 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
 
   return (
     <>
-      <Tarjeta className="flex items-center gap-4 p-4">
+      <Caja className="flex items-center gap-4 p-4">
         <EscudoClase equipo={equipo} tamanio="lg" />
         <div className="min-w-0">
           <h1 className="font-titulos text-3xl font-extrabold uppercase leading-none tracking-wide">{equipo.nombre}</h1>
@@ -72,20 +74,26 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
             <Racha resultados={torneo.rachas[id] ?? []} />
           </div>
         </div>
-      </Tarjeta>
+      </Caja>
 
-      {fila && (
-        <dl className="mt-3 grid grid-cols-4 gap-2 text-center">
-          {[
-            ["PJ", fila.pj],
-            ["GF", fila.gf],
-            ["GC", fila.gc],
-            ["Fair play", fila.fairPlay],
-          ].map(([titulo, valor]) => (
-            <Tarjeta key={titulo} className="px-1 py-2">
-              <dt className="text-[11px] font-semibold uppercase tracking-wide text-texto-suave">{titulo}</dt>
+      {numeros.pj > 0 && (
+        <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
+          {(
+            [
+              ["Partidos", numeros.pj, null],
+              ["Goles a favor", numeros.gf, null],
+              ["Goles en contra", numeros.gc, null],
+              ["Vallas invictas", numeros.vallasInvictas, null],
+              ["Amarillas", numeros.amarillas, <Tarjeta key="i" tipo="amarilla" />],
+              ["Rojas", numeros.rojas, <Tarjeta key="i" tipo="roja" />],
+            ] as const
+          ).map(([titulo, valor, icono]) => (
+            <Caja key={titulo} className="flex flex-col justify-between px-1 py-2">
+              <dt className="flex items-center justify-center gap-1 text-[11px] font-semibold uppercase leading-tight tracking-wide text-texto-suave">
+                {icono} {titulo}
+              </dt>
               <dd className="font-titulos text-2xl font-bold tabular-nums">{valor}</dd>
-            </Tarjeta>
+            </Caja>
           ))}
         </dl>
       )}
@@ -141,7 +149,7 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
                   {plantel.length === 0 ? (
                     <Vacio>Todavía no hay jugadores cargados.</Vacio>
                   ) : (
-                    <Tarjeta>
+                    <Caja>
                       <ul>
                         {plantel.map((j) => {
                           const stats = torneo.estadisticasJugadores[j.id];
@@ -179,7 +187,7 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
                           );
                         })}
                       </ul>
-                    </Tarjeta>
+                    </Caja>
                   )}
                 </>
               ),

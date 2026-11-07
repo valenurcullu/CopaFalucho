@@ -1,15 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { IconoPelota, Tarjeta } from "@/components/ui/iconos";
 import { marca } from "@/config/marca";
 import type { Equipo, Jugador } from "@/domain/tipos";
-import type { EstadisticasJugador } from "@/lib/torneo/estadisticas";
+import { datoPorPosicion, promedioGol, type EstadisticasEquipo, type EstadisticasJugador } from "@/lib/torneo/estadisticas";
 import { FotoJugador } from "./FotoJugador";
 
 interface Props {
   jugador: Jugador;
   equipo: Equipo | null;
   estadisticas: EstadisticasJugador;
+  /** Del equipo del jugador: para el promedio de gol y las vallas invictas. */
+  estadisticasEquipo: EstadisticasEquipo;
   edicion: number;
   mostrarPesoAltura: boolean;
 }
@@ -27,7 +30,7 @@ function Dato({ titulo, valor }: { titulo: string; valor: string }) {
  * Ficha del jugador con estética de figurita de álbum: marco rojo, foto
  * grande, número y franja con el nombre.
  */
-export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAltura }: Props) {
+export function Figurita({ jugador, equipo, estadisticas, estadisticasEquipo, edicion, mostrarPesoAltura }: Props) {
   // Solo los datos que están cargados: a los veteranos sin datos no les aparecen guiones.
   const datos: [string, string][] = [];
   if (equipo) datos.push([equipo.anio ? "Clase" : "Equipo", String(equipo.anio ?? equipo.nombre)]);
@@ -36,6 +39,17 @@ export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAl
   if (mostrarPesoAltura && jugador.pesoKg) datos.push(["Peso", `${String(jugador.pesoKg).replace(".", ",")} kg`]);
   // Con 4 datos van de a 2 por fila, así entran posiciones largas como "Mediocampista".
   const columnas = ["grid-cols-1", "grid-cols-1", "grid-cols-2", "grid-cols-3", "grid-cols-2"][datos.length];
+
+  // Según la posición: promedio de gol (medio y delantero) o vallas invictas (arquero y defensor).
+  const enTorneo: [string, string | number, ReactNode][] = [["Goles", estadisticas.goles, <IconoPelota key="i" />]];
+  const extra = datoPorPosicion(jugador.posicion);
+  if (extra === "promedio") {
+    const promedio = promedioGol(estadisticas.goles, estadisticasEquipo.pj);
+    enTorneo.push(["Promedio", promedio === null ? "–" : promedio.toFixed(2).replace(".", ","), null]);
+  } else if (extra === "vallas") {
+    enTorneo.push(["Vallas invictas", estadisticasEquipo.vallasInvictas, null]);
+  }
+  enTorneo.push(["Amarillas", estadisticas.amarillas, <Tarjeta key="i" tipo="amarilla" />], ["Rojas", estadisticas.rojas, <Tarjeta key="i" tipo="roja" />]);
 
   return (
     <article
@@ -79,25 +93,15 @@ export function Figurita({ jugador, equipo, estadisticas, edicion, mostrarPesoAl
 
         <div className="border-t border-white/15 px-3 pb-3 pt-2">
           <h2 className="mb-1.5 text-center text-xs font-semibold uppercase tracking-[0.2em] opacity-75">En el torneo</h2>
-          <dl className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <dt className="flex items-center justify-center gap-1 text-xs opacity-80">
-                <IconoPelota /> Goles
-              </dt>
-              <dd className="font-titulos text-3xl font-extrabold">{estadisticas.goles}</dd>
-            </div>
-            <div>
-              <dt className="flex items-center justify-center gap-1 text-xs opacity-80">
-                <Tarjeta tipo="amarilla" /> Amarillas
-              </dt>
-              <dd className="font-titulos text-3xl font-extrabold">{estadisticas.amarillas}</dd>
-            </div>
-            <div>
-              <dt className="flex items-center justify-center gap-1 text-xs opacity-80">
-                <Tarjeta tipo="roja" /> Rojas
-              </dt>
-              <dd className="font-titulos text-3xl font-extrabold">{estadisticas.rojas}</dd>
-            </div>
+          <dl className={`grid gap-1 text-center ${enTorneo.length === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
+            {enTorneo.map(([titulo, valor, icono]) => (
+              <div key={titulo} className="flex flex-col justify-end">
+                <dt className="flex items-center justify-center gap-1 text-xs leading-tight opacity-80">
+                  {icono} {titulo}
+                </dt>
+                <dd className="font-titulos text-3xl font-extrabold">{valor}</dd>
+              </div>
+            ))}
           </dl>
         </div>
       </div>

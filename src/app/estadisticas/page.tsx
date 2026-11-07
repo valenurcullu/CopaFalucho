@@ -5,6 +5,7 @@ import { EsqueletoLista, TituloPagina } from "@/components/ui/basicos";
 import { torneoConfig } from "@/config/torneo";
 import { obtenerTorneo } from "@/lib/torneo";
 import { formatearDiaCorto, nombreJugador } from "@/lib/formato";
+import { ESTADISTICAS_EQUIPO_VACIAS } from "@/lib/torneo/estadisticas";
 import { textoMotivo } from "@/lib/torneo/sanciones";
 import { indices } from "@/lib/torneo/vista";
 
@@ -42,6 +43,7 @@ async function EstadisticasConDatos() {
           cumplida: s.cumplida,
         };
       })}
+      equipos={torneo.equipos.map((e) => ({ id: e.id, nombre: e.nombre, ...(torneo.estadisticasEquipos[e.id] ?? ESTADISTICAS_EQUIPO_VACIAS) }))}
       conFichas={torneoConfig.jugadores.mostrarFichas}
     />
   );

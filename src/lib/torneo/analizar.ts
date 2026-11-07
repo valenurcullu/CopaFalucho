@@ -1,6 +1,15 @@
 import type { LlaveConfig, TorneoConfig } from "@/domain/config";
 import type { DatosTorneo, Equipo, Evento, Jugador, Partido } from "@/domain/tipos";
-import { tablaGoleadores, tablaTarjetas, estadisticasPorJugador, type EstadisticasJugador, type FilaGoleador, type FilaTarjetas } from "./estadisticas";
+import {
+  estadisticasPorEquipo,
+  estadisticasPorJugador,
+  tablaGoleadores,
+  tablaTarjetas,
+  type EstadisticasEquipo,
+  type EstadisticasJugador,
+  type FilaGoleador,
+  type FilaTarjetas,
+} from "./estadisticas";
 import { ErrorFormato, llavesEstandar, ORDEN_FASES, resolverLlaves } from "./llaves";
 import { calcularMarcador, ganadorDe, type Marcador } from "./marcador";
 import { calcularSanciones, type Sancion } from "./sanciones";
@@ -54,6 +63,8 @@ export interface Torneo {
   /** Últimos resultados de cada equipo, del más viejo al más nuevo. */
   rachas: Record<string, Resultado[]>;
   estadisticasJugadores: Record<string, EstadisticasJugador>;
+  /** Goles, vallas invictas y tarjetas de cada equipo en todo el torneo. */
+  estadisticasEquipos: Record<string, EstadisticasEquipo>;
   /** Problemas de configuración del formato (no de la planilla). */
   erroresFormato: string[];
   avisos: DatosTorneo["avisos"];
@@ -232,6 +243,11 @@ export function analizarTorneo(datos: DatosTorneo, config: TorneoConfig, largoRa
     sanciones: calcularSanciones(partidos, datos.eventos, config.sanciones),
     rachas,
     estadisticasJugadores: Object.fromEntries(estadisticasPorJugador(datos.eventos)),
+    estadisticasEquipos: estadisticasPorEquipo(
+      datos.equipos.map((e) => e.id),
+      partidos,
+      datos.eventos,
+    ),
     erroresFormato,
     avisos,
     origen: datos.origen,
