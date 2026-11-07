@@ -50,6 +50,12 @@ describe("formato gviz de Google Sheets", () => {
 });
 
 describe("encabezados", () => {
+  it("ignora las columnas vacías que exporta Google", () => {
+    const { columnas, filas } = leerCsv('"id","año","","",""\n"2001","2001","","",""\n');
+    expect(columnas).toEqual(["id", "anio"]);
+    expect(filas).toEqual([{ id: "2001", anio: "2001" }]);
+  });
+
   it("acepta mayúsculas, acentos y alias", () => {
     const { columnas } = leerCsv("ID,Año,Zona,Nombre opcional\n2001,2001,A,\n");
     expect(columnas).toEqual(["id", "anio", "zona", "nombre"]);
