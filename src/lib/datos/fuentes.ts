@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { Hoja } from "@/domain/tipos";
 import type { HojasCrudas } from "./armar";
@@ -56,7 +56,6 @@ async function leerHojas(leer: (hoja: string) => Promise<string>): Promise<Hojas
 export function leerEjemplo(): Promise<HojasCrudas> {
   const carpeta = path.join(process.cwd(), "data", "ejemplo");
   return leerHojas((hoja) => readFile(path.join(carpeta, `${hoja.toLowerCase()}.csv`), "utf8"));
-
 }
 
 /**
@@ -82,11 +81,42 @@ async function pedirHoja(url: string, hoja: string, revalidarSegundos: number): 
   return respuesta.text();
 }
 
+const urlHoja = (idPlanilla: string, hoja: string) =>
+  `https://docs.google.com/spreadsheets/d/${encodeURIComponent(idPlanilla)}` +
+  `/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(hoja)}`;
+
+/**
+ * Copia de la planilla para `next build`. El build genera las páginas en varios
+ * procesos a la vez y, si cada uno le pide la planilla a Google, Google corta
+ * con HTTP 429. Por eso `prebuild` la baja una sola vez y el build lee de acá.
+ */
+const CARPETA_BUILD = path.join(process.cwd(), ".next", "cache", "planilla-build");
+const archivoBuild = (hoja: string) => path.join(CARPETA_BUILD, `${hoja.toLowerCase()}.csv`);
+const enBuild = () => process.env.NEXT_PHASE === "phase-production-build";
+
+/** Baja todas las hojas, de a una, y las guarda para el build. */
+export async function descargarPlanillaParaBuild(idPlanilla: string): Promise<string[]> {
+  await mkdir(CARPETA_BUILD, { recursive: true });
+  const guardadas: string[] = [];
+  for (const hoja of [...HOJAS, HOJA_FORMULARIO]) {
+    const texto = await pedirHoja(urlHoja(idPlanilla, hoja), hoja, 0).catch((error) => {
+      if (hoja === HOJA_FORMULARIO) return null; // opcional
+      throw error;
+    });
+    if (texto === null) continue;
+    await writeFile(archivoBuild(hoja), texto, "utf8");
+    guardadas.push(hoja);
+  }
+  return guardadas;
+}
+
 export function leerPlanilla(idPlanilla: string, revalidarSegundos: number): Promise<HojasCrudas> {
   return leerHojas(async (hoja) => {
-    const url =
-      `https://docs.google.com/spreadsheets/d/${encodeURIComponent(idPlanilla)}` +
-      `/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(hoja)}`;
+    if (enBuild()) {
+      const copia = await readFile(archivoBuild(hoja), "utf8").catch(() => null);
+      if (copia !== null) return copia;
+    }
+    const url = urlHoja(idPlanilla, hoja);
     let ultimoError: unknown;
     for (let intento = 1; intento <= INTENTOS; intento++) {
       try {
