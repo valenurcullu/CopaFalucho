@@ -1,8 +1,8 @@
 import type { TorneoConfig } from "@/domain/config";
-import type { Evento, Partido } from "@/domain/tipos";
+import type { Evento, Partido, SancionManual } from "@/domain/tipos";
 import { ORDEN_FASES } from "./llaves";
 
-export type MotivoSancion = "amarillas" | "doble_amarilla" | "roja_directa";
+export type MotivoSancion = "amarillas" | "doble_amarilla" | "roja_directa" | "manual";
 
 export interface Sancion {
   jugadorId: string;
@@ -12,8 +12,10 @@ export interface Sancion {
   fechas: number;
   /** true si es una roja directa sin fechas cargadas: se cuenta 1 hasta que la comisión decida. */
   aDefinir: boolean;
-  /** Partido en el que se ganó la sanción. */
+  /** Partido en el que se ganó la sanción. Vacío en las cargadas a mano. */
   partidoId: string;
+  /** Solo en las cargadas a mano: el motivo que escribió la comisión. */
+  detalle?: string | null;
   /** Próximo partido que el jugador no puede jugar. Null si ya cumplió o si todavía no está en el fixture. */
   cumpleEnPartidoId: string | null;
   /** Partidos de suspensión ya jugados por el equipo. */
@@ -21,7 +23,7 @@ export interface Sancion {
   cumplida: boolean;
 }
 
-export function textoMotivo(s: Pick<Sancion, "motivo" | "fechas" | "aDefinir">): string {
+export function textoMotivo(s: Pick<Sancion, "motivo" | "fechas" | "aDefinir" | "detalle">): string {
   const fechas = `${s.fechas} ${s.fechas === 1 ? "fecha" : "fechas"}`;
   switch (s.motivo) {
     case "amarillas":
@@ -30,6 +32,8 @@ export function textoMotivo(s: Pick<Sancion, "motivo" | "fechas" | "aDefinir">):
       return `Doble amarilla: ${fechas}`;
     case "roja_directa":
       return s.aDefinir ? "Roja directa: fechas a definir por la comisión" : `Roja directa: ${fechas}`;
+    case "manual":
+      return `${s.detalle ?? "Sanción de la comisión"}: ${fechas}`;
   }
 }
 
@@ -40,12 +44,14 @@ type PartidoOrdenado = Pick<Partido, "id" | "fase" | "estado" | "localId" | "vis
  * - N amarillas acumuladas (3) → 1 fecha. Se limpian al llegar a la fase configurada (semis).
  * - Doble amarilla en un partido (dos amarillas, o amarilla + roja) → 1 fecha.
  * - Roja directa → las fechas que cargue la comisión en la fila de la roja (si no, 1 "a definir").
+ * - Las cargadas a mano (`manuales`) valen desde su partido, o desde el primero del equipo.
  * `partidos` tiene que venir en orden cronológico y con los equipos resueltos.
  */
 export function calcularSanciones(
   partidos: readonly PartidoOrdenado[],
   eventos: readonly Evento[],
   reglas: TorneoConfig["sanciones"],
+  manuales: readonly SancionManual[] = [],
 ): Sancion[] {
   const indiceLimpieza = reglas.limpiarAmarillasEn ? ORDEN_FASES.indexOf(reglas.limpiarAmarillasEn) : Infinity;
   const tarjetasPorPartido = new Map<string, Evento[]>();
@@ -108,6 +114,25 @@ export function calcularSanciones(
           if (total % reglas.amarillasParaSuspension === 0) sancionar(jugadorId, "amarillas", 1);
         }
       }
+    });
+  }
+
+  for (const m of manuales) {
+    const delEquipo = partidos.filter((p) => p.localId === m.equipoId || p.visitanteId === m.equipoId);
+    const desde = Math.max(m.desdePartidoId ? delEquipo.findIndex((p) => p.id === m.desdePartidoId) : 0, 0);
+    const suspension = delEquipo.slice(desde, desde + m.fechas);
+    const jugados = suspension.filter((p) => p.estado === "finalizado").length;
+    sanciones.push({
+      jugadorId: m.jugadorId,
+      equipoId: m.equipoId,
+      motivo: "manual",
+      detalle: m.motivo,
+      fechas: m.fechas,
+      aDefinir: false,
+      partidoId: "",
+      cumpleEnPartidoId: suspension.find((p) => p.estado !== "finalizado")?.id ?? null,
+      fechasCumplidas: jugados,
+      cumplida: jugados >= m.fechas,
     });
   }
   return sanciones;

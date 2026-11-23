@@ -327,3 +327,68 @@ describe("formulario de jugadores", () => {
     ]);
   });
 });
+
+describe("pestaña Sanciones", () => {
+  const base = {
+    Equipos: [...equiposBase],
+    Jugadores: [
+      { id: "2001-07", equipo: "2001", nombre: "Bautista Acevedo", apodo: "Lolo" },
+      { id: "2002-09", equipo: "2002", nombre: "Felipe Duran", apodo: "" },
+    ],
+  };
+  const sanciones = (filas: FilaCruda[]) => armarDatos(hojas({ ...base, Sanciones: filas }), opciones);
+
+  it("reconoce al jugador por nombre, apellido, apodo o id", () => {
+    const datos = sanciones([
+      { equipo: "2001", jugador: "Acevedo", fechas_sancion: "1", motivo: "", desde_partido: "" },
+      { equipo: "2002", jugador: "Felipe Duran", fechas_sancion: "2", motivo: "Roja anterior", desde_partido: "" },
+      { equipo: "01", jugador: "Lolo", fechas_sancion: "1", motivo: "", desde_partido: "" },
+      { equipo: "2001", jugador: "2001-07", fechas_sancion: "1", motivo: "", desde_partido: "" },
+    ]);
+    expect(datos.avisos).toEqual([]);
+    expect(datos.sancionesManuales).toEqual([
+      { equipoId: "2001", jugadorId: "2001-07", fechas: 1, motivo: null, desdePartidoId: null },
+      { equipoId: "2002", jugadorId: "2002-09", fechas: 2, motivo: "Roja anterior", desdePartidoId: null },
+      { equipoId: "2001", jugadorId: "2001-07", fechas: 1, motivo: null, desdePartidoId: null },
+      { equipoId: "2001", jugadorId: "2001-07", fechas: 1, motivo: null, desdePartidoId: null },
+    ]);
+  });
+
+  it("avisa y saltea lo que no se puede resolver", () => {
+    const datos = sanciones([
+      { equipo: "2001", jugador: "Nadie", fechas_sancion: "1", motivo: "", desde_partido: "" },
+      { equipo: "2001", jugador: "Felipe Duran", fechas_sancion: "1", motivo: "", desde_partido: "" },
+      { equipo: "2001", jugador: "Acevedo", fechas_sancion: "", motivo: "", desde_partido: "" },
+      { equipo: "9999", jugador: "Acevedo", fechas_sancion: "1", motivo: "", desde_partido: "" },
+    ]);
+    expect(datos.sancionesManuales).toEqual([]);
+    expect(datos.avisos.map((a) => [a.hoja, a.fila, a.nivel])).toEqual([
+      ["Sanciones", 2, "error"],
+      ["Sanciones", 3, "error"],
+      ["Sanciones", 4, "error"],
+      ["Sanciones", 5, "error"],
+    ]);
+  });
+
+  it("sin la pestaña, no hay sanciones ni avisos", () => {
+    const datos = armarDatos(hojas({ ...base }), opciones);
+    expect(datos.sancionesManuales).toEqual([]);
+    expect(datos.avisos).toEqual([]);
+  });
+
+  it("la suspensión aparece en el análisis del torneo", () => {
+    const datos = sanciones([{ equipo: "2001", jugador: "Acevedo", fechas_sancion: "1", motivo: "", desde_partido: "" }]);
+    const t = analizarTorneo(
+      {
+        ...datos,
+        partidos: [
+          { id: "Z01", fase: "zona", zona: "A", llave: null, fechaNro: 1, fecha: "2026-11-23", hora: "17:00", cancha: null, localId: "2001", visitanteId: "2002", golesLocal: null, golesVisitante: null, arbitro: null, arbitroEquipoId: null, estado: "programado", penalesLocal: null, penalesVisitante: null, fila: 2 },
+        ],
+      },
+      torneoConfig,
+    );
+    expect(t.sanciones).toHaveLength(1);
+    expect(t.sanciones[0]).toMatchObject({ jugadorId: "2001-07", motivo: "manual", cumpleEnPartidoId: "Z01", cumplida: false });
+  });
+});
+

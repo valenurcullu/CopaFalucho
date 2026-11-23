@@ -6,12 +6,20 @@ import { leerCsv, normalizarColumna, type FilaCruda } from "./csv";
 import { esFormularioDeJugadores } from "./formulario";
 import { COLUMNAS } from "./esquemas";
 
-type HojaObligatoria = Exclude<Hoja, "Formulario">;
+type HojaObligatoria = Exclude<Hoja, "Formulario" | "Sanciones">;
 
 export const HOJAS: readonly HojaObligatoria[] = ["Equipos", "Partidos", "Eventos", "Jugadores"];
 
 /** Pestaña con las respuestas del Google Form de jugadores (opcional). */
 export const HOJA_FORMULARIO = "Formulario";
+
+/** Pestaña con suspensiones cargadas a mano (opcional). */
+export const HOJA_SANCIONES = "Sanciones";
+
+/** true si la tabla parece la pestaña Sanciones (y no otra que devolvió gviz por no existir esa). */
+function esHojaDeSanciones(columnas: readonly string[]): boolean {
+  return ["equipo", "jugador", "fechas_sancion"].every((c) => columnas.includes(c)) && !columnas.includes("partido_id");
+}
 
 /** Columnas mínimas para reconocer cada hoja (gviz devuelve la primera hoja si el nombre no existe). */
 const COLUMNAS_CLAVE: Record<HojaObligatoria, string[]> = {
@@ -33,10 +41,11 @@ function verificarColumnas(hoja: HojaObligatoria, columnas: string[]) {
 }
 
 async function leerHojas(leer: (hoja: string) => Promise<string>): Promise<HojasCrudas> {
-  const [contenidos, formulario] = await Promise.all([
+  const [contenidos, formulario, sanciones] = await Promise.all([
     Promise.all(HOJAS.map(leer)),
-    // Opcional: si no está o no se puede leer, la app sigue sin el formulario.
+    // Opcionales: si no están o no se pueden leer, la app sigue sin ellas.
     leer(HOJA_FORMULARIO).catch(() => ""),
+    leer(HOJA_SANCIONES).catch(() => ""),
   ]);
   const entradas = HOJAS.map((hoja, i) => {
     const { columnas, filas } = leerCsv(contenidos[i]);
@@ -46,9 +55,11 @@ async function leerHojas(leer: (hoja: string) => Promise<string>): Promise<Hojas
   });
   // Si la pestaña no existe, gviz devuelve la primera hoja: solo se usa si tiene las preguntas del formulario.
   const respuestas = leerCsv(formulario);
+  const suspensiones = leerCsv(sanciones);
   return {
     ...(Object.fromEntries(entradas) as Record<HojaObligatoria, FilaCruda[]>),
     Formulario: esFormularioDeJugadores(respuestas.columnas) ? respuestas.filas : [],
+    Sanciones: esHojaDeSanciones(suspensiones.columnas) ? suspensiones.filas : [],
   };
 }
 
@@ -98,9 +109,9 @@ const enBuild = () => process.env.NEXT_PHASE === "phase-production-build";
 export async function descargarPlanillaParaBuild(idPlanilla: string): Promise<string[]> {
   await mkdir(CARPETA_BUILD, { recursive: true });
   const guardadas: string[] = [];
-  for (const hoja of [...HOJAS, HOJA_FORMULARIO]) {
+  for (const hoja of [...HOJAS, HOJA_FORMULARIO, HOJA_SANCIONES]) {
     const texto = await pedirHoja(urlHoja(idPlanilla, hoja), hoja, 0).catch((error) => {
-      if (hoja === HOJA_FORMULARIO) return null; // opcional
+      if (hoja === HOJA_FORMULARIO || hoja === HOJA_SANCIONES) return null; // opcionales
       throw error;
     });
     if (texto === null) continue;

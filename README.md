@@ -38,6 +38,19 @@ En vez de tocar la planilla, se pueden cargar los resultados con dos Google Form
 - Si un jugador no está en la lista, se escribe en la pregunta de abajo como `1995 - Juan Perez`.
 - Para corregir un gol o una tarjeta cargados por error, borrá esa fila en la hoja **Eventos**.
 
+### Suspensiones que vienen de afuera (pestaña Sanciones)
+
+Las suspensiones por tarjetas se calculan solas. Para un jugador que ya viene suspendido y no tiene una tarjeta en ningún partido del torneo, usá la pestaña **Sanciones** (es opcional):
+
+| equipo | jugador | fechas | motivo | desde_partido |
+|---|---|---|---|---|
+| 2006 | Bautista Acevedo | 1 | | |
+
+- `jugador`: nombre completo, apodo, apellido (si es único en el equipo) o id, como en Eventos.
+- `fechas`: partidos de suspensión. Cuentan desde el primer partido del equipo, o desde `desde_partido` (por ejemplo `Z08`) si se completa.
+- `motivo` es opcional y se muestra en la app; vacío dice "Sanción de la comisión".
+- Aparece en **Stats → Sanciones** y en la página del equipo, y pasa a "Ya cumplidas" cuando el equipo juega esos partidos.
+
 ### Un partido, paso a paso
 
 1. En la hoja **Partidos**, en la fila del partido, escribí el resultado en `goles_local` y `goles_visitante` y cambiá `estado` a **finalizado**. Con eso ya se actualizan las tablas y las llaves.

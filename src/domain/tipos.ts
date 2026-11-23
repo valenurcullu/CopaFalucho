@@ -93,7 +93,7 @@ export interface Jugador {
   fotoDriveId: string | null;
 }
 
-export type Hoja = "Equipos" | "Partidos" | "Eventos" | "Jugadores" | "Formulario";
+export type Hoja = "Equipos" | "Partidos" | "Eventos" | "Jugadores" | "Formulario" | "Sanciones";
 
 /**
  * Problema en una fila de la planilla, para mostrarle al admin.
@@ -107,11 +107,27 @@ export interface AvisoDatos {
   mensaje: string;
 }
 
+/**
+ * Suspensión cargada a mano en la pestaña "Sanciones": para jugadores que ya
+ * vienen suspendidos y no tienen una tarjeta en ningún partido del torneo.
+ */
+export interface SancionManual {
+  equipoId: string;
+  jugadorId: string;
+  /** Partidos de suspensión (1 o más). */
+  fechas: number;
+  /** Texto libre que se muestra en la app. Si falta, "Sanción de la comisión". */
+  motivo: string | null;
+  /** Partido desde el cual cuenta; si falta, desde el primer partido del equipo. */
+  desdePartidoId: string | null;
+}
+
 export interface DatosTorneo {
   equipos: Equipo[];
   partidos: Partido[];
   eventos: Evento[];
   jugadores: Jugador[];
+  sancionesManuales: SancionManual[];
   avisos: AvisoDatos[];
   origen: "ejemplo" | "planilla";
   /** ISO timestamp del momento en que se leyeron los datos. */

@@ -43,6 +43,7 @@ function torneoChico(extra: { partidos?: Partido[]; eventos?: Evento[] } = {}): 
   return {
     equipos: [equipo("2001", "A"), equipo("2002", "A"), equipo("2003", "B"), equipo("2004", "B")],
     jugadores: [jugador("2001-01", "2001", "Ana"), jugador("2003-01", "2003", "Beto")],
+    sancionesManuales: [],
     partidos: [
       partido("Z1", { zona: "A", localId: "2001", visitanteId: "2002", fecha: "2026-11-28" }),
       partido("Z2", { zona: "B", localId: "2003", visitanteId: "2004", fecha: "2026-11-28" }),
@@ -172,7 +173,7 @@ describe("formato 2026: 20 equipos, 4 zonas de 5", () => {
         }
     }
     for (const llave of ["C1", "C2", "C3", "C4"]) partidos.push(partido(`P-${llave}`, { fase: "cuartos", llave, estado: "programado" }));
-    const datos: DatosTorneo = { equipos, jugadores: [], partidos, eventos, avisos: [], origen: "ejemplo", actualizadoEn: "2026-12-01T00:00:00Z" };
+    const datos: DatosTorneo = { equipos, jugadores: [], sancionesManuales: [], partidos, eventos, avisos: [], origen: "ejemplo", actualizadoEn: "2026-12-01T00:00:00Z" };
     const t = analizarTorneo(datos, { ...config, formato: { ...config.formato, cruces: "general" } });
 
     expect(t.zonas.map((z) => z.tabla.length)).toEqual([5, 5, 5, 5]);

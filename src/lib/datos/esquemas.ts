@@ -16,7 +16,7 @@ import {
  * Columnas de cada hoja de la planilla, en el orden en que aparecen.
  * Es el contrato con el admin: la planilla de ejemplo se genera desde acá.
  */
-export const COLUMNAS: Record<Exclude<Hoja, "Formulario">, readonly string[]> = {
+export const COLUMNAS: Record<Exclude<Hoja, "Formulario" | "Sanciones">, readonly string[]> = {
   Equipos: ["id", "año", "zona", "nombre", "sigla", "alias", "foto_url", "ranking_anterior", "puntos_descontados"],
   Partidos: [
     "id",
@@ -39,6 +39,9 @@ export const COLUMNAS: Record<Exclude<Hoja, "Formulario">, readonly string[]> = 
   Eventos: ["partido_id", "tipo", "equipo", "jugador", "minuto", "fechas_sancion"],
   Jugadores: ["id", "equipo", "nombre", "apodo", "número", "posición", "foto_url", "peso_kg", "altura_cm"],
 };
+
+/** Pestaña opcional "Sanciones": suspensiones que no salen de una tarjeta de un partido. */
+export const COLUMNAS_SANCIONES = ["equipo", "jugador", "fechas", "motivo", "desde_partido"] as const;
 
 const ALIAS_FASE: Record<string, Fase> = {
   zona: "zona",
@@ -141,4 +144,14 @@ export const filaJugador = z.object({
   foto_url: textoOpcional(),
   peso_kg: decimalOpcional("El peso", { min: 35, max: 200 }),
   altura_cm: decimalOpcional("La altura", { min: 120, max: 230 }),
+});
+
+export const filaSancion = z.object({
+  equipo: id("el equipo"),
+  /** Id, nombre, apodo o apellido del jugador (como en Eventos). */
+  jugador: texto("el jugador"),
+  fechas_sancion: enteroOpcional("Las fechas", { min: 1, max: 50 }),
+  motivo: textoOpcional(),
+  /** Id del partido desde el cual cuenta. Si se omite, desde el primer partido del equipo. */
+  desde_partido: idOpcional(),
 });

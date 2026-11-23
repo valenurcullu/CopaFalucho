@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Evento, Fase } from "@/domain/tipos";
-import { calcularSanciones } from "./sanciones";
+import { calcularSanciones, textoMotivo } from "./sanciones";
 
 const reglas = { amarillasParaSuspension: 3, limpiarAmarillasEn: "semis" as const };
 
@@ -59,5 +59,39 @@ describe("calcularSanciones", () => {
     const partidos = [partido("P1"), partido("P2"), partido("P3", "cuartos", "programado"), partido("P4", "semis", "programado")];
     const s = calcularSanciones(partidos, [tarjeta("P1", "roja", "A-1", "A", 3)], reglas);
     expect(s[0]).toMatchObject({ fechas: 3, aDefinir: false, fechasCumplidas: 1, cumpleEnPartidoId: "P3", cumplida: false });
+  });
+
+  describe("sanciones cargadas a mano", () => {
+    const manual = (fechas: number, desdePartidoId: string | null = null) => ({
+      equipoId: "A", jugadorId: "A-1", fechas, motivo: null, desdePartidoId,
+    });
+
+    it("suspenden desde el primer partido del equipo", () => {
+      const partidos = [partido("P1", "zona", "programado"), partido("P2", "zona", "programado")];
+      const [s] = calcularSanciones(partidos, [], reglas, [manual(1)]);
+      expect(s).toMatchObject({ motivo: "manual", fechas: 1, cumpleEnPartidoId: "P1", fechasCumplidas: 0, cumplida: false, aDefinir: false });
+      expect(textoMotivo(s)).toBe("Sanción de la comisión: 1 fecha");
+    });
+
+    it("se cumplen cuando el equipo juega los partidos de la suspensión", () => {
+      const partidos = [partido("P1"), partido("P2", "zona", "programado"), partido("P3", "zona", "programado")];
+      const [s] = calcularSanciones(partidos, [], reglas, [manual(2)]);
+      expect(s).toMatchObject({ fechasCumplidas: 1, cumpleEnPartidoId: "P2", cumplida: false });
+      const [hecha] = calcularSanciones([partido("P1"), partido("P2")], [], reglas, [manual(2)]);
+      expect(hecha).toMatchObject({ cumplida: true, cumpleEnPartidoId: null });
+    });
+
+    it("pueden empezar en un partido puntual y llevar un motivo", () => {
+      const partidos = [partido("P1"), partido("P2", "zona", "programado"), partido("P3", "zona", "programado")];
+      const [s] = calcularSanciones(partidos, [], reglas, [{ ...manual(1, "P3"), motivo: "Roja del torneo anterior" }]);
+      expect(s).toMatchObject({ cumpleEnPartidoId: "P3", cumplida: false });
+      expect(textoMotivo(s)).toBe("Roja del torneo anterior: 1 fecha");
+    });
+
+    it("conviven con las que salen de las tarjetas", () => {
+      const partidos = [partido("P1"), partido("P2", "zona", "programado")];
+      const s = calcularSanciones(partidos, [tarjeta("P1", "roja", "A-2", "A", 1)], reglas, [manual(1)]);
+      expect(s.map((x) => x.motivo).sort()).toEqual(["manual", "roja_directa"]);
+    });
   });
 });

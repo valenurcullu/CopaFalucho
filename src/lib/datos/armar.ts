@@ -7,15 +7,18 @@ import type {
   Hoja,
   Jugador,
   Partido,
+  SancionManual,
 } from "@/domain/tipos";
 import type { FilaCruda } from "./csv";
 import { normalizarCodigo, sinAcentos } from "./campos";
-import { filaEquipo, filaEvento, filaJugador, filaPartido } from "./esquemas";
+import { filaEquipo, filaEvento, filaJugador, filaPartido, filaSancion } from "./esquemas";
 import { leerRespuestas } from "./formulario";
 
-export type HojasCrudas = Record<Exclude<Hoja, "Formulario">, FilaCruda[]> & {
+export type HojasCrudas = Record<Exclude<Hoja, "Formulario" | "Sanciones">, FilaCruda[]> & {
   /** Respuestas del Google Form de jugadores (opcional). */
   Formulario?: FilaCruda[];
+  /** Suspensiones cargadas a mano (opcional). */
+  Sanciones?: FilaCruda[];
 };
 
 interface Opciones {
@@ -24,7 +27,7 @@ interface Opciones {
   ahora?: Date;
 }
 
-const ORDEN_HOJAS: Hoja[] = ["Equipos", "Jugadores", "Formulario", "Partidos", "Eventos"];
+const ORDEN_HOJAS: Hoja[] = ["Equipos", "Jugadores", "Formulario", "Partidos", "Eventos", "Sanciones"];
 
 /** Fila 1 = encabezado, así que el índice 0 es la fila 2 de la planilla. */
 const filaPlanilla = (indice: number) => indice + 2;
@@ -113,7 +116,7 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
 
   function validar<S extends z.ZodType>(hoja: Exclude<Hoja, "Formulario">, esquema: S): { fila: z.output<S>; indice: number }[] {
     const validas: { fila: z.output<S>; indice: number }[] = [];
-    hojas[hoja].forEach((cruda, indice) => {
+    (hojas[hoja] ?? []).forEach((cruda, indice) => {
       const r = esquema.safeParse(cruda);
       if (r.success) validas.push({ fila: r.data, indice });
       else avisar("error", hoja, indice, r.error.issues.map((i) => i.message).join(". "));
@@ -345,11 +348,37 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
     });
   }
 
+  // Sanciones cargadas a mano (pestaña opcional "Sanciones").
+  const sancionesManuales: SancionManual[] = [];
+  for (const { fila, indice } of validar("Sanciones", filaSancion)) {
+    const equipoId = resolverEquipo(fila.equipo);
+    if (!equipoId) {
+      avisar("error", "Sanciones", indice, `El equipo ${fila.equipo} no existe en la hoja Equipos`);
+      continue;
+    }
+    const jugador = jugadores.get(normalizarCodigo(fila.jugador)) ?? buscarJugador(equipoId, fila.jugador);
+    if (!jugador || jugador.equipoId !== equipoId) {
+      avisar("error", "Sanciones", indice, `No encontré a ${fila.jugador} en ${equipos.get(equipoId)!.nombre}: escribí su nombre completo, apodo o id`);
+      continue;
+    }
+    if (fila.fechas_sancion === null) {
+      avisar("error", "Sanciones", indice, "Faltan las fechas de suspensión (1 o más)");
+      continue;
+    }
+    let desdePartidoId = fila.desde_partido;
+    if (desdePartidoId && !partidos.has(desdePartidoId)) {
+      avisar("advertencia", "Sanciones", indice, `El partido ${desdePartidoId} no existe: la suspensión cuenta desde el primer partido del equipo`);
+      desdePartidoId = null;
+    }
+    sancionesManuales.push({ equipoId, jugadorId: jugador.id, fechas: fila.fechas_sancion, motivo: fila.motivo, desdePartidoId });
+  }
+
   return {
     equipos: [...equipos.values()],
     partidos: [...partidos.values()],
     eventos,
     jugadores: [...jugadores.values()],
+    sancionesManuales,
     avisos: avisos.sort((a, b) => ORDEN_HOJAS.indexOf(a.hoja) - ORDEN_HOJAS.indexOf(b.hoja) || a.fila - b.fila),
     origen: opciones.origen,
     actualizadoEn: (opciones.ahora ?? new Date()).toISOString(),

@@ -105,7 +105,7 @@ async function DetalleEquipo({ params }: { params: PageProps<"/equipos/[id]">["p
             {suspendidos.map((s) => {
               const j = jugadores.get(s.jugadorId);
               return (
-                <li key={`${s.jugadorId}-${s.partidoId}`}>
+                <li key={`${s.jugadorId}-${s.partidoId}-${s.motivo}`}>
                   {j ? nombreJugador(j) : s.jugadorId} <span className="text-texto-suave">· {textoMotivo(s)}</span>
                 </li>
               );

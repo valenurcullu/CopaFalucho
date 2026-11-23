@@ -240,7 +240,7 @@ export function analizarTorneo(datos: DatosTorneo, config: TorneoConfig, largoRa
     })),
     goleadores: tablaGoleadores(datos.eventos, datos.jugadores),
     tarjetas: tablaTarjetas(datos.eventos, datos.jugadores),
-    sanciones: calcularSanciones(partidos, datos.eventos, config.sanciones),
+    sanciones: calcularSanciones(partidos, datos.eventos, config.sanciones, datos.sancionesManuales),
     rachas,
     estadisticasJugadores: Object.fromEntries(estadisticasPorJugador(datos.eventos)),
     estadisticasEquipos: estadisticasPorEquipo(
