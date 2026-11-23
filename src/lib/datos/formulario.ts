@@ -4,7 +4,7 @@ import type { FilaCruda } from "./csv";
 /**
  * Respuestas del Google Form de jugadores (pestaña "Formulario" de la planilla).
  * Las columnas tienen el texto de cada pregunta, así que se buscan por cómo
- * empiezan ("Peso (kg)" → peso). Ver scripts/google/formulario-jugadores.gs.
+ * empiezan ("Peso (kg)" → peso). Ver scripts/google/formularios.gs.
  */
 export interface RespuestaFormulario {
   /** Fila en la planilla, para los avisos. */

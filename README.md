@@ -22,6 +22,22 @@ Los datos salen de una planilla de Google: el admin carga resultados ahí y la a
 
 Desde el celular, con la app **Hojas de cálculo de Google**. La app pública toma los cambios en **5 a 10 minutos**.
 
+### Con formularios, desde el celular (menos errores)
+
+En vez de tocar la planilla, se pueden cargar los resultados con dos Google Forms:
+
+- **Cargar resultado:** se elige el partido de una lista, se ponen los goles de cada equipo y listo. Completa `goles_local`, `goles_visitante` y `estado = finalizado` en Partidos.
+- **Cargar gol o tarjeta:** una respuesta por cada gol o tarjeta. Se elige el partido, qué pasó y el jugador de una lista (empieza con el equipo). Agrega la fila en Eventos con el id del jugador, que es lo que la app reconoce sin errores.
+
+**Crearlos (una vez):** pegá [scripts/google/formularios.gs](scripts/google/formularios.gs) en Apps Script (el mismo archivo del formulario de jugadores), cambiá `CLAVE_CARGA` si querés otra clave, guardá, recargá la planilla y usá **Copa Falucho → Crear formularios de carga**. Los links quedan en el Registro de ejecución.
+
+- Piden una **clave** para que no cargue cualquiera.
+- Cada respuesta queda en las pestañas **CargaResultados** y **CargaEventos**, con la columna **Estado de la carga**: dice `OK` o qué salió mal (por ejemplo, un jugador que no juega ese partido). Si dice ERROR, no se cargó nada.
+- Los partidos que ya tienen resultado figuran con ✔ en la lista. Cargar de nuevo el mismo partido pisa el resultado anterior.
+- Las listas de partidos y jugadores se actualizan solas cada hora. Para actualizarlas ya: **Copa Falucho → Actualizar listas de los formularios de carga**.
+- Si un jugador no está en la lista, se escribe en la pregunta de abajo como `1995 - Juan Perez`.
+- Para corregir un gol o una tarjeta cargados por error, borrá esa fila en la hoja **Eventos**.
+
 ### Un partido, paso a paso
 
 1. En la hoja **Partidos**, en la fila del partido, escribí el resultado en `goles_local` y `goles_visitante` y cambiá `estado` a **finalizado**. Con eso ya se actualizan las tablas y las llaves.
@@ -154,7 +170,7 @@ Todos los jugadores se cargan con el formulario. A los que no lo completen (por 
 
 **Crearlo (una vez):**
 
-1. En la planilla del torneo: **Extensiones → Apps Script**. Borrá lo que haya y pegá el contenido de [scripts/google/formulario-jugadores.gs](scripts/google/formulario-jugadores.gs). Guardá.
+1. En la planilla del torneo: **Extensiones → Apps Script**. Borrá lo que haya y pegá el contenido de [scripts/google/formularios.gs](scripts/google/formularios.gs). Guardá.
 2. Elegí la función `crearFormulario` y tocá **Ejecutar**. Google pide permisos: "Revisar permisos" → tu cuenta → "Configuración avanzada" → "Ir a … (no seguro)" → Permitir. Es tu propio script.
 3. En **Registro de ejecución** aparecen el link para editar el formulario y el link para mandar a los jugadores.
 4. Abrí el formulario para editarlo y agregá la pregunta **Foto** (Google no deja crearla por código): tipo **Subir archivo**, solo imágenes, 1 archivo, máximo 10 MB, obligatoria. Movela abajo de "Altura (cm)".
