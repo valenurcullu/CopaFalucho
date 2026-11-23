@@ -2,13 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import { actualizarTodo } from "@/app/actions";
 import { IconoActualizar, IconoSinSenal } from "@/components/ui/iconos";
 import { useConexion } from "@/hooks/useConexion";
 import { haceCuanto } from "@/lib/formato";
 
 /**
- * "Actualizado hace X" + botón para volver a pedir los datos. Sin señal,
- * avisa que lo que se ve es la última versión guardada.
+ * "Actualizado hace X" + botón para actualizar toda la app de una vez (la
+ * planilla y todas las pantallas). Sin señal, avisa que lo que se ve es la
+ * última versión guardada.
  */
 export function EstadoDatos({ actualizadoEn }: { actualizadoEn: string }) {
   const router = useRouter();
@@ -40,7 +42,17 @@ export function EstadoDatos({ actualizadoEn }: { actualizadoEn: string }) {
   return (
     <button
       type="button"
-      onClick={() => iniciar(() => router.refresh())}
+      onClick={() =>
+        iniciar(async () => {
+          try {
+            const { omitido } = await actualizarTodo();
+            // Si alguien actualizó recién, igual se vuelve a pedir esta pantalla.
+            if (omitido) router.refresh();
+          } catch {
+            router.refresh();
+          }
+        })
+      }
       className="-mr-2 flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-medium opacity-90 hover:bg-white/10"
       aria-label={`Actualizar datos. Última actualización: ${hace || "recién"}`}
     >

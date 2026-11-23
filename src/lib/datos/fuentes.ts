@@ -77,11 +77,14 @@ export function leerEjemplo(): Promise<HojasCrudas> {
 /** Última versión buena de cada hoja, para no cortar la app si Google tarda o falla. */
 const ultimaLectura = new Map<string, string>();
 
+/** Etiqueta del caché de Next para todas las lecturas de la planilla: permite descartarlas juntas. */
+export const ETIQUETA_PLANILLA = "planilla";
+
 const ESPERA_MS = 8_000;
 const INTENTOS = 2;
 
 async function pedirHoja(url: string, hoja: string, revalidarSegundos: number): Promise<string> {
-  const respuesta = await fetch(url, { next: { revalidate: revalidarSegundos }, signal: AbortSignal.timeout(ESPERA_MS) });
+  const respuesta = await fetch(url, { next: { revalidate: revalidarSegundos, tags: [ETIQUETA_PLANILLA] }, signal: AbortSignal.timeout(ESPERA_MS) });
   if (!respuesta.ok) {
     throw new Error(`No se pudo leer la hoja "${hoja}" (HTTP ${respuesta.status}). ¿Está compartida con el link?`);
   }
