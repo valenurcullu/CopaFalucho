@@ -111,7 +111,7 @@ Reglas que conviene respetar:
    - `sanciones`: cuántas amarillas dan una fecha y en qué fase se limpian.
    - `duracionMinutos` y `descansoMinutos`: definen qué partidos "se están jugando" según la hora.
    - `puntos` y `fairPlay` (puntos por amarilla y por roja).
-3. **Los cruces se arman solos** según las zonas que haya en la hoja Equipos y los clasificados por zona. Con `cruces: "general"` se usa la tabla general (en la pantalla Tablas aparece abajo de todo). Con `cruces: "zonas"`, el cuadro queda así; en los dos casos la cantidad total de clasificados tiene que ser 2, 4, 8 o 16:
+3. **Los cruces se arman solos** según las zonas que haya en la hoja Equipos y los clasificados por zona. Con `cruces: "general"` se usa la tabla general de clasificados, que se calcula por dentro (no se muestra en la pantalla Tablas). Con `cruces: "zonas"`, el cuadro queda así; en los dos casos la cantidad total de clasificados tiene que ser 2, 4, 8 o 16:
 
    | Zonas | Pasan por zona | Fase final | Llaves para cargar en Partidos |
    |---|---|---|---|
