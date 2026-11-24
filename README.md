@@ -200,7 +200,7 @@ Todos los jugadores se cargan con el formulario. A los que no lo completen (por 
 - Cada foto que llega se hace pública (solo lectura) para que la app la muestre. Si alguna no aparece: **Copa Falucho → Hacer públicas las fotos ya subidas**.
 - Google pide iniciar sesión con una cuenta de Google para subir archivos.
 
-**Arreglar las fotos** (recortarlas centrando la cara y optimizarlas), cada tanto:
+**Arreglar las fotos** (recortarlas centrando la cara, enderezar las que están acostadas y optimizarlas), cada tanto:
 
 ```bash
 npm run fotos:arreglar      # solo las nuevas o cambiadas
@@ -208,6 +208,8 @@ git add public/jugadores src/generated && git commit -m "Fotos de jugadores" && 
 ```
 
 Necesita `GOOGLE_SHEET_ID` en `.env.local`. Mientras no se corra, la app muestra la foto tal como se subió.
+
+La cara se detecta con el framework Vision de macOS (necesita una Mac con Swift, ya viene con las herramientas de Xcode). Si en una foto no hay una cara visible, o si se corre en otro sistema, se recorta por la zona más llamativa y el script avisa cuáles revisar: `--todas` vuelve a procesar todas.
 
 ### Mostrar u ocultar fichas
 
