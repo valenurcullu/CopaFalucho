@@ -58,6 +58,64 @@ function indicePorNombre(jugadores: Jugador[]) {
   };
 }
 
+/** true si las dos palabras difieren en una letra como mucho (falta, sobra o cambia una). */
+function unaEdicionDeDiferencia(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let ediciones = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i++;
+      j++;
+      continue;
+    }
+    if (++ediciones > 1) return false;
+    if (a.length > b.length) i++;
+    else if (a.length < b.length) j++;
+    else {
+      i++;
+      j++;
+    }
+  }
+  return ediciones + (a.length - i) + (b.length - j) <= 1;
+}
+
+/** Misma palabra, o casi: una letra de diferencia solo cuenta si son de 5 letras o más ("Robiano" ≈ "Robbiano"). */
+const mismaPalabra = (a: string, b: string) => a === b || (a.length >= 5 && b.length >= 5 && unaEdicionDeDiferencia(a, b));
+
+const palabras = (s: string) => normalizarNombre(s).split(/[^a-z0-9ñ]+/).filter(Boolean);
+
+/**
+ * Para cuando alguien escribe un nombre con un error de tipeo o a medias en
+ * Eventos: busca, dentro del MISMO equipo, un único jugador que se le parezca.
+ * Una sola palabra tiene que parecerse al apellido o al apodo, o ser un error
+ * de tipeo del nombre de pila (idéntico no alcanza: hay muchos "Juan"); con dos
+ * o más, todas tienen que estar en el nombre o el apodo. Si hay dudas (más de
+ * un candidato), no adivina.
+ */
+function indiceParecido(jugadores: Jugador[]) {
+  const porEquipo = new Map<string, { jugador: Jugador; nombre: string[]; apodo: string[] }[]>();
+  for (const jugador of jugadores) {
+    const lista = porEquipo.get(jugador.equipoId) ?? [];
+    lista.push({ jugador, nombre: palabras(jugador.nombre), apodo: palabras(jugador.apodo ?? "") });
+    porEquipo.set(jugador.equipoId, lista);
+  }
+  return (equipoId: string, texto: string): Jugador | null => {
+    const buscadas = palabras(texto);
+    if (buscadas.length === 0) return null;
+    const candidatos = (porEquipo.get(equipoId) ?? []).filter(({ nombre, apodo }) =>
+      buscadas.length === 1
+        ? mismaPalabra(buscadas[0], nombre.at(-1) ?? "") ||
+          apodo.some((p) => mismaPalabra(buscadas[0], p)) ||
+          nombre.slice(0, -1).some((p) => p !== buscadas[0] && mismaPalabra(buscadas[0], p))
+        : buscadas.every((b) => [...nombre, ...apodo].some((p) => mismaPalabra(b, p))),
+    );
+    return candidatos.length === 1 ? candidatos[0].jugador : null;
+  };
+}
+
 /** Máximo de la lista de buena fe de los equipos combinados (sin año único). */
 const MAXIMO_COMBINADO = 20;
 
@@ -230,7 +288,17 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
     filasJugador.set(id, existente ? filasJugador.get(existente.id)! : indice);
   }
   controlarListas([...jugadores.values()], equipos, (indice, mensaje) => avisar("advertencia", "Jugadores", indice, mensaje), filasJugador);
-  const buscarJugador = indicePorNombre([...jugadores.values()]);
+  const registrados = [...jugadores.values()];
+  const buscarJugador = indicePorNombre(registrados);
+  const buscarParecido = indiceParecido(registrados);
+  /** Un aviso por cada nombre que se tomó por parecido, no uno por fila. */
+  const avisadosPorParecido = new Set<string>();
+  const avisarParecido = (hoja: "Eventos" | "Sanciones", indice: number, escrito: string, jugador: Jugador) => {
+    const clave = `${jugador.id}|${normalizarNombre(escrito)}`;
+    if (avisadosPorParecido.has(clave)) return;
+    avisadosPorParecido.add(clave);
+    avisar("advertencia", hoja, indice, `"${escrito}" se tomó como ${jugador.nombre} por parecido: si es otra persona, escribí su nombre completo`);
+  };
 
   // Partidos
   const partidos = new Map<string, Partido>();
@@ -320,7 +388,10 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
     let jugadorId: string | null = null;
     if (fila.jugador) {
       const porId = jugadores.get(normalizarCodigo(fila.jugador));
-      const encontrado = porId ?? buscarJugador(equipoId, fila.jugador);
+      const exacto = porId ?? buscarJugador(equipoId, fila.jugador);
+      const parecido = exacto ? null : buscarParecido(equipoId, fila.jugador);
+      if (parecido) avisarParecido("Eventos", indice, fila.jugador, parecido);
+      const encontrado = exacto ?? parecido;
       if (encontrado && encontrado.equipoId !== equipoId) {
         avisar("advertencia", "Eventos", indice, `${fila.jugador} no es de ${equipos.get(equipoId)!.nombre}: se cuenta sin jugador`);
       } else if (encontrado) {
@@ -356,7 +427,10 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
       avisar("error", "Sanciones", indice, `El equipo ${fila.equipo} no existe en la hoja Equipos`);
       continue;
     }
-    const jugador = jugadores.get(normalizarCodigo(fila.jugador)) ?? buscarJugador(equipoId, fila.jugador);
+    const exacto = jugadores.get(normalizarCodigo(fila.jugador)) ?? buscarJugador(equipoId, fila.jugador);
+    const parecido = exacto ? null : buscarParecido(equipoId, fila.jugador);
+    if (parecido) avisarParecido("Sanciones", indice, fila.jugador, parecido);
+    const jugador = exacto ?? parecido;
     if (!jugador || jugador.equipoId !== equipoId) {
       avisar("error", "Sanciones", indice, `No encontré a ${fila.jugador} en ${equipos.get(equipoId)!.nombre}: escribí su nombre completo, apodo o id`);
       continue;

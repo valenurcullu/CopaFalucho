@@ -392,3 +392,54 @@ describe("pestaña Sanciones", () => {
   });
 });
 
+describe("jugadores por parecido", () => {
+  const partido = { id: "Z1", fase: "zona", local: "2001", visitante: "2002", estado: "finalizado" };
+  const jugadores = [
+    { id: "2001-01", equipo: "2001", nombre: "Esteban Robbiano", apodo: "Rafa" },
+    { id: "2001-02", equipo: "2001", nombre: "Demian Fernandez Alburquerque", apodo: "Pola" },
+    { id: "2001-03", equipo: "2001", nombre: "Marcos Ferrari", apodo: "" },
+    { id: "2001-04", equipo: "2001", nombre: "Pedro Ferraro", apodo: "" },
+    { id: "2001-05", equipo: "2001", nombre: "Juan Perez", apodo: "" },
+  ];
+  const evento = (jugador: string, equipo = "2001") => ({ partido_id: "Z1", tipo: "gol", equipo, jugador, minuto: "" });
+  const armar = (...nombres: [string, string?][]) =>
+    armarDatos(hojas({ Equipos: equiposBase, Jugadores: jugadores, Partidos: [partido], Eventos: nombres.map(([n, e]) => evento(n, e)) }), opciones);
+
+  it("une un error de tipeo con el jugador del mismo equipo y lo avisa una sola vez", () => {
+    const datos = armar(["Robiano"], ["robiano"], ["Demoan"]);
+    expect(datos.eventos.map((e) => e.jugadorId)).toEqual(["2001-01", "2001-01", "2001-02"]);
+    expect(datos.jugadores.some((j) => j.soloEnEventos)).toBe(false);
+    expect(datos.avisos.map((a) => [a.hoja, a.nivel, a.fila])).toEqual([
+      ["Eventos", "advertencia", 2],
+      ["Eventos", "advertencia", 4],
+    ]);
+    expect(datos.avisos[0].mensaje).toContain("Esteban Robbiano");
+  });
+
+  it("une un nombre a medias cuando todas las palabras están en el jugador", () => {
+    expect(armar(["Demian Fernandez"]).eventos[0].jugadorId).toBe("2001-02");
+    expect(armar(["Pola"]).avisos).toEqual([]);
+  });
+
+  it("no adivina si hay más de un candidato o si la palabra no se parece", () => {
+    const datos = armar(["Ferrare"], ["Robbi"], ["Juan"], ["Lopez"]);
+    expect(datos.eventos.every((e) => e.jugadorId?.startsWith("2001-") && e.jugadorId.length > 7)).toBe(true);
+    expect(datos.jugadores.filter((j) => j.soloEnEventos).map((j) => j.nombre).sort()).toEqual(["Ferrare", "Juan", "Lopez", "Robbi"]);
+    expect(datos.avisos).toEqual([]);
+  });
+
+  it("no mezcla equipos: el mismo apellido en otro equipo queda como jugador suelto", () => {
+    const datos = armar(["Robiano", "2002"]);
+    expect(datos.jugadores.find((j) => j.soloEnEventos)).toMatchObject({ equipoId: "2002", nombre: "Robiano" });
+    expect(datos.avisos).toEqual([]);
+  });
+
+  it("los apellidos cortos solo coinciden si son idénticos", () => {
+    const datos = armarDatos(
+      hojas({ Equipos: equiposBase, Jugadores: [{ id: "2001-01", equipo: "2001", nombre: "Juan Rey", apodo: "" }], Partidos: [partido], Eventos: [evento("Ray")] }),
+      opciones,
+    );
+    expect(datos.jugadores.find((j) => j.soloEnEventos)?.nombre).toBe("Ray");
+  });
+});
+

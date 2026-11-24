@@ -67,6 +67,7 @@ Las suspensiones por tarjetas se calculan solas. Para un jugador que ya viene su
    | Z07 | gol en contra | 2003 | 2003-02 | |
 
    - `tipo`: `gol`, `gol en contra`, `amarilla` o `roja`.
+   - `jugador`: se reconoce por id, nombre completo, apodo o apellido. Si el nombre tiene un error de tipeo o está a medias ("Robiano" por "Robbiano", "Demoan" por "Demian"), la app lo une con el único jugador **de ese mismo equipo** que se le parece y deja un aviso en `/admin/chequeo`. Si hay dudas (dos candidatos), no adivina y queda como jugador suelto. Así, cuando alguien completa la ficha después, sus goles y tarjetas se suman solos a su figurita.
    - `equipo`: el equipo **del jugador**, escrito como quieras (`1990`, `90`, `8ypico`…). En un gol en contra, el del que lo hizo; la app se lo suma al rival.
    - `jugador`: el apodo, el apellido, el nombre o el id de la hoja Jugadores. Si el jugador no está cargado, la app lo agrega sola con ese nombre, así que goleadores y tarjetas funcionan aunque la hoja Jugadores esté vacía.
    - `minuto` es opcional.
