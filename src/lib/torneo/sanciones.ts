@@ -23,8 +23,11 @@ export interface Sancion {
   cumplida: boolean;
 }
 
+/** Desde esta cantidad de fechas, la sanción es por el resto del torneo (se carga como 50). */
+const FECHAS_DEL_TORNEO = 20;
+
 export function textoMotivo(s: Pick<Sancion, "motivo" | "fechas" | "aDefinir" | "detalle">): string {
-  const fechas = `${s.fechas} ${s.fechas === 1 ? "fecha" : "fechas"}`;
+  const fechas = s.fechas >= FECHAS_DEL_TORNEO ? "suspendido del torneo" : `${s.fechas} ${s.fechas === 1 ? "fecha" : "fechas"}`;
   switch (s.motivo) {
     case "amarillas":
       return `Acumulación de amarillas: ${fechas}`;

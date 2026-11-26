@@ -94,4 +94,10 @@ describe("calcularSanciones", () => {
       expect(s.map((x) => x.motivo).sort()).toEqual(["manual", "roja_directa"]);
     });
   });
+
+  it("una suspensión de 20 fechas o más se muestra como suspendido del torneo", () => {
+    expect(textoMotivo({ motivo: "roja_directa", fechas: 50, aDefinir: false })).toBe("Roja directa: suspendido del torneo");
+    expect(textoMotivo({ motivo: "roja_directa", fechas: 2, aDefinir: false })).toBe("Roja directa: 2 fechas");
+    expect(textoMotivo({ motivo: "manual", fechas: 50, aDefinir: false, detalle: "Expulsado" })).toBe("Expulsado: suspendido del torneo");
+  });
 });
