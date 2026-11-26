@@ -3,7 +3,7 @@ import { Insignia, Jugandose } from "@/components/ui/basicos";
 import { EscudoClase } from "@/components/ui/EscudoClase";
 import { IconoPelota, Tarjeta } from "@/components/ui/iconos";
 import type { Equipo } from "@/domain/tipos";
-import type { EventoVista, PartidoTarjeta } from "@/lib/torneo/vista";
+import { agruparEventos, type EventoAgrupado, type PartidoTarjeta } from "@/lib/torneo/vista";
 
 interface Props {
   partido: PartidoTarjeta;
@@ -39,7 +39,7 @@ function FilaEquipo({ equipo, etiqueta, goles, gana, penales }: { equipo: Equipo
   );
 }
 
-function LineaEvento({ evento, conFichas }: { evento: EventoVista; conFichas: boolean }) {
+function LineaEvento({ evento, conFichas }: { evento: EventoAgrupado; conFichas: boolean }) {
   const nombre = evento.jugador ?? "Sin dato";
   const icono =
     evento.tipo === "gol" || evento.tipo === "gol_en_contra" ? (
@@ -51,13 +51,19 @@ function LineaEvento({ evento, conFichas }: { evento: EventoVista; conFichas: bo
     <>
       {nombre}
       {evento.tipo === "gol_en_contra" && <span className="text-texto-suave"> (e/c)</span>}
+      {evento.cantidad > 1 && (
+        <span className="font-semibold text-texto-suave" aria-label={`${evento.cantidad} veces`}>
+          {" "}
+          ×{evento.cantidad}
+        </span>
+      )}
     </>
   );
   const derecha = evento.lado === "visitante";
   return (
     <li className={`flex min-h-7 items-center gap-1.5 ${derecha ? "flex-row-reverse text-right" : ""}`}>
       {icono}
-      <span className="w-6 shrink-0 tabular-nums text-texto-suave">{evento.minuto !== null ? `${evento.minuto}’` : ""}</span>
+      <span className="w-6 shrink-0 tabular-nums text-texto-suave">{evento.cantidad === 1 && evento.minuto !== null ? `${evento.minuto}’` : ""}</span>
       {conFichas && evento.jugadorId && evento.jugador ? (
         <Link href={`/jugadores/${evento.jugadorId}`} prefetch={false} className="min-w-0 truncate py-1 underline-offset-2 hover:underline">
           {contenido}
@@ -71,8 +77,8 @@ function LineaEvento({ evento, conFichas }: { evento: EventoVista; conFichas: bo
 
 export function TarjetaPartido({ partido: p, conFichas, mostrarFecha, jugandose = false }: Props) {
   const finalizado = p.estado === "finalizado";
-  const eventosLocal = p.eventos.filter((e) => e.lado === "local");
-  const eventosVisitante = p.eventos.filter((e) => e.lado === "visitante");
+  const eventosLocal = agruparEventos(p.eventos.filter((e) => e.lado === "local"));
+  const eventosVisitante = agruparEventos(p.eventos.filter((e) => e.lado === "visitante"));
 
   return (
     <article

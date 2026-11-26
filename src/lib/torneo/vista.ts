@@ -13,6 +13,27 @@ export interface EventoVista {
   jugador: string | null;
 }
 
+/** Los eventos iguales de un mismo jugador, juntos: dos goles de Lacal son "Lacal ×2". */
+export interface EventoAgrupado extends EventoVista {
+  cantidad: number;
+}
+
+/**
+ * Junta los eventos del mismo tipo, del mismo lado y del mismo jugador (doblete,
+ * triplete, doble amarilla). Respeta el orden en que aparece cada jugador por
+ * primera vez. Los eventos sin jugador conocido también se juntan.
+ */
+export function agruparEventos(eventos: readonly EventoVista[]): EventoAgrupado[] {
+  const grupos = new Map<string, EventoAgrupado>();
+  for (const e of eventos) {
+    const clave = `${e.lado}|${e.tipo}|${e.jugadorId ?? e.jugador ?? ""}`;
+    const grupo = grupos.get(clave);
+    if (grupo) grupo.cantidad++;
+    else grupos.set(clave, { ...e, cantidad: 1 });
+  }
+  return [...grupos.values()];
+}
+
 export interface PartidoTarjeta {
   id: string;
   fase: PartidoVista["fase"];
