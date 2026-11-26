@@ -430,10 +430,17 @@ export function armarDatos(hojas: HojasCrudas, opciones: Opciones): DatosTorneo 
     const exacto = jugadores.get(normalizarCodigo(fila.jugador)) ?? buscarJugador(equipoId, fila.jugador);
     const parecido = exacto ? null : buscarParecido(equipoId, fila.jugador);
     if (parecido) avisarParecido("Sanciones", indice, fila.jugador, parecido);
-    const jugador = exacto ?? parecido;
-    if (!jugador || jugador.equipoId !== equipoId) {
-      avisar("error", "Sanciones", indice, `No encontré a ${fila.jugador} en ${equipos.get(equipoId)!.nombre}: escribí su nombre completo, apodo o id`);
+    if (exacto && exacto.equipoId !== equipoId) {
+      avisar("error", "Sanciones", indice, `${fila.jugador} es de otro equipo: revisá el equipo de esta fila`);
       continue;
+    }
+    let jugador = exacto ?? parecido;
+    if (!jugador) {
+      // Un entrenador, o alguien que no está en los jugadores: se agrega como persona suelta
+      // (no figura en el plantel). Si fue un error de tipeo, el aviso lo marca.
+      jugador = jugadorDesdeEvento(equipoId, fila.jugador, jugadores);
+      jugadores.set(jugador.id, jugador);
+      avisar("advertencia", "Sanciones", indice, `${fila.jugador} no está en los jugadores de ${equipos.get(equipoId)!.nombre}: se agregó como persona suelta`);
     }
     if (fila.fechas_sancion === null) {
       avisar("error", "Sanciones", indice, "Faltan las fechas de suspensión (1 o más)");

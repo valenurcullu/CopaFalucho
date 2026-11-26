@@ -356,18 +356,24 @@ describe("pestaña Sanciones", () => {
 
   it("avisa y saltea lo que no se puede resolver", () => {
     const datos = sanciones([
-      { equipo: "2001", jugador: "Nadie", fechas_sancion: "1", motivo: "", desde_partido: "" },
-      { equipo: "2001", jugador: "Felipe Duran", fechas_sancion: "1", motivo: "", desde_partido: "" },
       { equipo: "2001", jugador: "Acevedo", fechas_sancion: "", motivo: "", desde_partido: "" },
       { equipo: "9999", jugador: "Acevedo", fechas_sancion: "1", motivo: "", desde_partido: "" },
+      { equipo: "2001", jugador: "2002-09", fechas_sancion: "1", motivo: "", desde_partido: "" },
     ]);
     expect(datos.sancionesManuales).toEqual([]);
     expect(datos.avisos.map((a) => [a.hoja, a.fila, a.nivel])).toEqual([
       ["Sanciones", 2, "error"],
       ["Sanciones", 3, "error"],
       ["Sanciones", 4, "error"],
-      ["Sanciones", 5, "error"],
     ]);
+  });
+
+  it("una persona que no está en los jugadores (un entrenador) se agrega suelta, con aviso", () => {
+    const datos = sanciones([{ equipo: "2001", jugador: "Wolf", fechas_sancion: "50", motivo: "Entrenador", desde_partido: "" }]);
+    const wolf = datos.jugadores.find((j) => j.nombre === "Wolf");
+    expect(wolf).toMatchObject({ equipoId: "2001", soloEnEventos: true });
+    expect(datos.sancionesManuales).toEqual([{ equipoId: "2001", jugadorId: wolf!.id, fechas: 50, motivo: "Entrenador", desdePartidoId: null }]);
+    expect(datos.avisos.map((a) => [a.hoja, a.nivel])).toEqual([["Sanciones", "advertencia"]]);
   });
 
   it("sin la pestaña, no hay sanciones ni avisos", () => {

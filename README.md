@@ -50,6 +50,8 @@ Las suspensiones por tarjetas se calculan solas. Para un jugador que ya viene su
 - `fechas`: partidos de suspensión. Cuentan desde el primer partido del equipo, o desde `desde_partido` (por ejemplo `Z08`) si se completa.
 - `motivo` es opcional y se muestra en la app; vacío dice "Sanción de la comisión".
 - Aparece en **Stats → Sanciones** y en la página del equipo, y pasa a "Ya cumplidas" cuando el equipo juega esos partidos.
+- `fechas` en **50** es "suspendido del torneo": nunca pasa a cumplida. Si la suspensión se guarda para la próxima edición, hay que volver a cargarla en la pestaña Sanciones del torneo nuevo.
+- Si el nombre no está entre los jugadores (por ejemplo, un entrenador), se agrega como persona suelta: figura en Sanciones pero no en el plantel, y `/admin/chequeo` deja un aviso por si fue un error de tipeo.
 
 ### Un partido, paso a paso
 
